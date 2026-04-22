@@ -1,0 +1,132 @@
+name: 🐛 Bug Report
+description: Report a bug
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Bug Report
+
+        Please describe the bug you found in detail.
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected Component
+      options:
+        - Desktop (Electron)
+        - Frontend (Web UI)
+        - Backend (API)
+        - Backend (Core)
+        - CI/CD
+        - Docs
+      multiple: true
+    validations:
+      required: true
+
+  - type: dropdown
+    id: desktop_distribution
+    attributes:
+      label: Installation/Execution Method
+      description: Select N/A if this is not a Desktop issue.
+      options:
+        - DMG install
+        - ZIP install
+        - Homebrew Cask
+        - Source/development mode
+        - N/A (not a Desktop issue)
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 🐛 Bug Description
+      description: Clearly describe the bug
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 🔄 Steps to Reproduce
+      description: Steps to reproduce the bug
+      placeholder: |
+        1. Navigate to '...' page
+        2. Click '...' button
+        3. Error occurs
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: ✅ Expected Behavior
+      description: What should happen
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: ❌ Actual Behavior
+      description: What actually happens
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 📋 Logs/Error Messages
+      description: Console logs or error messages
+      render: shell
+
+  - type: markdown
+    attributes:
+      value: |
+        ### 🧪 Desktop Diagnostic Bundle (Required for Desktop Issues)
+
+        For Desktop issues, please go to **Settings > Installed App Diagnostics** and follow these steps before attaching:
+        1. Enable Debug Mode (24h)
+        2. Reproduce the issue
+        3. Run Export Diagnostic Bundle
+        4. Attach the generated ZIP file to this issue
+
+  - type: checkboxes
+    id: diagnostic_bundle_checklist
+    attributes:
+      label: Diagnostic Bundle Checklist
+      options:
+        - label: This is not a Desktop issue, so a diagnostic bundle is not needed
+        - label: I reproduced the issue after enabling Debug Mode
+        - label: I generated and attached the diagnostic bundle ZIP
+
+  - type: textarea
+    id: diagnostic_bundle_info
+    attributes:
+      label: Diagnostic Bundle Information
+      description: Please provide the bundle filename, creation time, and save path (if possible).
+      placeholder: |
+        - Filename: vibesmith-diagnostic-2026-02-23T19-20-01.zip
+        - Creation time: 2026-02-23 19:20 KST
+        - Save path: ~/Downloads/...
+
+  - type: textarea
+    id: diagnostic_bundle_notes
+    attributes:
+      label: Diagnostic Bundle Summary (Optional)
+      description: Note any specific points to check among the included logs (main/renderer/api/updater).
+      placeholder: |
+        - Includes updater.error log right before app exit
+        - Main window did not appear after splash
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: 🌍 Environment
+      placeholder: |
+        - OS: macOS 14.2
+        - Browser: Chrome 120
+        - Node: v18.19.0
+        - Python: 3.11.7

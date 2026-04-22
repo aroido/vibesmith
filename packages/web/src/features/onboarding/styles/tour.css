@@ -1,0 +1,124 @@
+/**
+ * Custom Driver.js Tour Styles
+ * VibeSmith 다크 테마에 맞춘 커스터마이징
+ */
+
+/* Popover 커스터마이징 */
+.vibesmith-tour-popover.driver-popover {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 12px;
+  box-shadow: 
+    0 0 20px rgba(56, 189, 248, 0.2),
+    0 10px 40px rgba(0, 0, 0, 0.5);
+  max-width: 400px;
+}
+
+/* 제목 스타일 */
+.vibesmith-tour-popover .driver-popover-title {
+  color: #f1f5f9;
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 설명 텍스트 */
+.vibesmith-tour-popover .driver-popover-description {
+  color: #cbd5e1;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+/* 진행 상태 */
+.vibesmith-tour-popover .driver-popover-progress-text {
+  color: #22d3ee;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* 버튼 스타일 */
+.vibesmith-tour-popover .driver-popover-footer button {
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+/* 다음/완료 버튼 */
+.vibesmith-tour-popover .driver-popover-next-btn {
+  background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+  color: white;
+  border: none;
+}
+
+.vibesmith-tour-popover .driver-popover-next-btn:hover {
+  background: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%);
+  box-shadow: 0 0 15px rgba(34, 211, 238, 0.5);
+  transform: translateY(-1px);
+}
+
+/* 이전 버튼 */
+.vibesmith-tour-popover .driver-popover-prev-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.vibesmith-tour-popover .driver-popover-prev-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #f1f5f9;
+}
+
+/* 스킵/닫기 버튼 */
+.vibesmith-tour-popover .driver-popover-close-btn {
+  background: transparent;
+  color: #94a3b8;
+  border: none;
+  font-size: 0.8125rem;
+}
+
+.vibesmith-tour-popover .driver-popover-close-btn:hover {
+  color: #f1f5f9;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* 화살표 */
+.vibesmith-tour-popover .driver-popover-arrow-side-left.driver-popover-arrow,
+.vibesmith-tour-popover .driver-popover-arrow-side-right.driver-popover-arrow,
+.vibesmith-tour-popover .driver-popover-arrow-side-top.driver-popover-arrow,
+.vibesmith-tour-popover .driver-popover-arrow-side-bottom.driver-popover-arrow {
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+/* 하이라이트 요소 */
+.driver-active-element {
+  outline: 2px solid #22d3ee !important;
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+/* 오버레이 */
+.driver-overlay {
+  backdrop-filter: blur(2px);
+}
+
+/* 반응형: 모바일 */
+@media (max-width: 640px) {
+  .vibesmith-tour-popover.driver-popover {
+    max-width: calc(100vw - 2rem);
+    margin: 1rem;
+  }
+
+  .vibesmith-tour-popover .driver-popover-title {
+    font-size: 1rem;
+  }
+
+  .vibesmith-tour-popover .driver-popover-description {
+    font-size: 0.875rem;
+  }
+}

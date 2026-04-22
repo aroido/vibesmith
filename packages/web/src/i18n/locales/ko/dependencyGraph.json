@@ -1,0 +1,101 @@
+{
+  "pageTitle": "의존성 그래프",
+  "pageSubtitle": "구성요소 간 참조 관계를 시각적으로 탐색하고 영향 범위를 빠르게 확인",
+  "loading": "종속성 그래프 로딩 중...",
+  "loadError": "종속성 그래프를 불러오지 못했습니다",
+  "noComponents": "구성요소를 찾을 수 없습니다.",
+  "noComponentsHint": "첫 번째 구성요소를 만들어 종속성 그래프를 확인하세요.",
+  "nodeSearch": "노드 검색",
+  "nodeSearchPlaceholder": "이름 또는 ID",
+  "hideDisabledNodes": "비활성 노드 숨기기",
+  "riskOnly": "위험만",
+  "riskOnlyFull": "위험만 (순환 또는 끊김)",
+  "noNodesMatchFilters": "현재 로컬 필터에 맞는 노드가 없습니다.",
+  "resetFilters": "로컬 필터 초기화",
+  "renderingNodes": "{{visible}} / {{total}}개 노드 렌더링",
+  "largeGraphMode": "(대형 그래프 모드: 연결도 상위 {{max}}개)",
+  "layout": {
+    "orientationLabel": "방향",
+    "auto": "자동",
+    "vertical": "세로",
+    "horizontal": "가로",
+    "autoHint": "자동은 그래프 규모와 화면 비율에 맞춰 방향을 선택합니다."
+  },
+  "overview": {
+    "modeLabel": "그래프 보기",
+    "modeOverview": "요약",
+    "modeDetail": "상세",
+    "autoEnabledHint": "대형 그래프({{threshold}}개 이상)에서는 요약 모드가 기본입니다.",
+    "renderingGroups": "{{nodes}}개 노드를 {{groups}}개 그룹으로 요약 렌더링",
+    "title": "대형 그래프 요약",
+    "subtitle": "{{count}}개 그룹입니다. 그룹을 선택해 상세로 진입하세요.",
+    "openAllDetail": "전체 상세 보기",
+    "nodeCount": "노드 {{count}}개",
+    "cycleCount": "순환 위험 {{count}}개",
+    "brokenCount": "끊김 참조 {{count}}개",
+    "breadcrumbAria": "요약 탐색 경로",
+    "detailSubtitle": "{{group}} · 이 그룹의 노드 {{count}}개",
+    "showAllDetail": "전체 상세 노드",
+    "backToOverview": "요약으로 복귀"
+  },
+  "focus": {
+    "modeLabel": "포커스 모드",
+    "enter": "포커스 진입",
+    "clear": "포커스 해제",
+    "activeOn": "포커스: {{name}}",
+    "escHint": "Esc 키로 포커스를 해제할 수 있습니다",
+    "directionLabel": "방향",
+    "directionOutbound": "아웃바운드",
+    "directionInbound": "인바운드",
+    "directionBoth": "양방향",
+    "depthLabel": "깊이",
+    "depthValue": "{{depth}} hop",
+    "hideOutside": "범위 밖 숨기기",
+    "scopeSummary": "노드 {{nodes}}개 · 강조 엣지 {{edges}}개"
+  },
+  "legend": {
+    "live": "실시간 범례",
+    "skill": "스킬",
+    "agent": "에이전트",
+    "command": "명령어",
+    "hook": "훅",
+    "rule": "규칙",
+    "dependency": "종속성",
+    "selectedPath": "선택 경로",
+    "focusedPath": "포커스 경로",
+    "cycleRisk": "순환 위험",
+    "broken": "끊김"
+  },
+  "panel": {
+    "loading": "로딩 중...",
+    "closeAria": "패널 닫기",
+    "error": "오류",
+    "loadDetailError": "종속성 상세 정보를 불러오지 못했습니다.",
+    "componentDetails": "구성요소 상세",
+    "dependsOn": "의존 ({{count}})",
+    "noDependencies": "종속성 없음",
+    "dependedBy": "참조됨 ({{count}})",
+    "noDependents": "참조 없음",
+    "broken": "끊김",
+    "viewDetails": "상세 보기 →"
+  },
+  "filters": {
+    "project": "프로젝트:",
+    "all": "전체",
+    "type": "타입:",
+    "circularDependencies": "순환 참조 {{count}}개",
+    "brokenReferences": "끊긴 참조 {{count}}개",
+    "typeSkill": "스킬",
+    "typeAgent": "에이전트",
+    "typeCommand": "명령어",
+    "typeHook": "훅",
+    "typeRule": "규칙",
+    "includeGlobal": "글로벌 포함"
+  },
+  "tree": {
+    "circular": "순환참조"
+  },
+  "canvas": {
+    "ariaLabel": "종속성 그래프 캔버스"
+  }
+}

@@ -1,0 +1,90 @@
+# Skill: {{ skill_name }}
+
+## Description
+{{ description }}
+
+## Tools
+{% for tool in tools|default(['read', 'write', 'shell']) %}
+- {{ tool }}
+{% endfor %}
+
+## Context
+- project_structure
+- dependencies
+
+## Instructions
+
+1. **Analyze Database Schema**
+   - Review current database structure
+   - Identify tables, columns, indexes, and constraints
+   - Check for existing migrations
+
+2. **Generate Migration**
+   - Database: {{ db_type }}
+   - Tool: {{ migration_tool }}
+
+3. **Migration Best Practices**
+   - Always test migrations on staging first
+   - Create reversible migrations (up/down)
+   - Back up database before applying
+   - Use transactions for atomic operations
+   - Add descriptive comments
+
+{% if migration_tool == 'alembic' %}
+## Alembic Patterns
+
+```python
+"""Add user authentication tables.
+
+Revision ID: abc123
+Revises: def456
+Create Date: 2026-02-18 10:00:00
+"""
+from alembic import op
+import sqlalchemy as sa
+
+revision = 'abc123'
+down_revision = 'def456'
+
+def upgrade():
+    op.create_table(
+        'users',
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('email', sa.String(255), nullable=False),
+        sa.Column('password_hash', sa.String(255), nullable=False),
+        sa.Column('created_at', sa.DateTime(), nullable=False),
+        sa.PrimaryKeyConstraint('id'),
+        sa.UniqueConstraint('email')
+    )
+
+def downgrade():
+    op.drop_table('users')
+```
+{% elif migration_tool == 'raw-sql' %}
+## SQL Migration Pattern
+
+```sql
+-- Migration: Add user authentication
+-- Date: 2026-02-18
+-- Author: Auto-generated
+
+-- Up Migration
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Down Migration (Rollback)
+-- DROP TABLE users;
+```
+{% endif %}
+
+## Best Practices
+
+- **Atomic Operations**: Use transactions
+- **Reversibility**: Always provide down migration
+- **Testing**: Test on dev/staging before production
+- **Backup**: Always backup before migration
+- **Documentation**: Add clear comments

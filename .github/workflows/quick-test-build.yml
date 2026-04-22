@@ -1,0 +1,90 @@
+name: Quick Test Build (No Notarization)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '20'
+  VITE_POSTHOG_KEY: ${{ vars.VITE_POSTHOG_KEY }}
+  VITE_POSTHOG_HOST: ${{ vars.VITE_POSTHOG_HOST != '' && vars.VITE_POSTHOG_HOST || 'https://us.i.posthog.com' }}
+
+jobs:
+  quick-build:
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: Install Python dependencies
+        run: |
+          cd packages/api
+          python3 -m venv .venv-pure
+          source .venv-pure/bin/activate
+          pip install -e ../core -e . pyinstaller
+      
+      - name: Build API executable
+        run: |
+          cd packages/api
+          python3 build_api_executable.py
+      
+      - name: Install Web dependencies
+        run: |
+          cd packages/web
+          npm ci
+      
+      - name: Build Web
+        run: |
+          cd packages/web
+          npm run build
+      
+      - name: Install Desktop dependencies
+        run: |
+          cd packages/desktop
+          npm ci
+      
+      - name: Build Desktop (NO SIGNING)
+        env:
+          # Completely disable notarization
+          SKIP_NOTARIZATION: "1"
+          # Disable afterSign script
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+        run: |
+          cd packages/desktop
+          npm run build
+          # Build without code signing (skip afterSign)
+          npx electron-builder --mac --publish never
+      
+      - name: Upload test build
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-build-no-notarization
+          path: |
+            packages/desktop/release/*/*.zip
+            packages/desktop/release/*/*.dmg
+          retention-days: 7
+      
+      - name: Summary
+        run: |
+          echo "✅ Test build completed!"
+          echo ""
+          echo "⚠️  This build is NOT code-signed or notarized"
+          echo "⚠️  Use only for testing purposes"
+          echo ""
+          echo "Download artifacts from:"
+          echo "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"

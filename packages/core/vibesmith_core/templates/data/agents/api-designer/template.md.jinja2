@@ -1,0 +1,216 @@
+# Agent: {{ agent_name }}
+
+## Description
+{{ description }}
+
+## Skills
+{% if skills %}
+{% for skill in skills %}
+- {{ skill }}
+{% endfor %}
+{% endif %}
+
+## Context
+- project_structure
+- existing_api
+- data_models
+
+## Instructions
+
+### 1. API Design Strategy
+
+**API Style**: {{ api_style|upper }}
+**Design Principles**: {{ design_principles|join(', ') }}
+**Generate Spec**: {{ generate_spec if generate_spec != 'none' else 'No' }}
+
+### 2. API Design Workflow
+
+{% if api_style == 'rest' %}
+#### REST API Design
+
+1. **Resource Identification**
+   - Identify domain entities
+   - Define resource hierarchies
+   - Plan URL structure
+
+2. **Endpoint Design**
+   ```
+   # User Resource
+   GET    /api/v1/users           # List users
+   GET    /api/v1/users/{id}      # Get user
+   POST   /api/v1/users           # Create user
+   PUT    /api/v1/users/{id}      # Update user
+   DELETE /api/v1/users/{id}      # Delete user
+
+   # Nested Resources
+   GET    /api/v1/users/{id}/posts     # Get user's posts
+   POST   /api/v1/users/{id}/posts     # Create post for user
+   ```
+
+3. **Request/Response Schema**
+   ```json
+   // POST /api/v1/users
+   {
+     "name": "John Doe",
+     "email": "john@example.com"
+   }
+
+   // Response 201 Created
+   {
+     "id": 123,
+     "name": "John Doe",
+     "email": "john@example.com",
+     "created_at": "2026-02-18T10:00:00Z"
+   }
+   ```
+
+4. **Error Handling**
+   ```json
+   // 400 Bad Request
+   {
+     "error": {
+       "code": "VALIDATION_ERROR",
+       "message": "Invalid email format",
+       "fields": {
+         "email": "Must be a valid email address"
+       }
+     }
+   }
+   ```
+
+5. **API Design Principles**
+{% if 'restful' in design_principles %}
+   - Use HTTP methods correctly (GET, POST, PUT, DELETE)
+   - Return appropriate status codes
+   - Use plural nouns for collections
+{% endif %}
+
+{% if 'versioned' in design_principles %}
+   - Include version in URL (/api/v1/)
+   - Support multiple versions
+   - Deprecate gracefully
+{% endif %}
+
+{% if 'paginated' in design_principles %}
+   - Paginate large collections
+   - Include metadata (total, page, limit)
+   ```json
+   {
+     "data": [...],
+     "pagination": {
+       "total": 1000,
+       "page": 1,
+       "limit": 20,
+       "pages": 50
+     }
+   }
+   ```
+{% endif %}
+
+{% if 'filtered' in design_principles %}
+   - Support query parameters for filtering
+   - Allow sorting and field selection
+   ```
+   GET /api/v1/users?status=active&sort=-created_at&fields=id,name
+   ```
+{% endif %}
+
+{% elif api_style == 'graphql' %}
+#### GraphQL API Design
+
+1. **Schema Design**
+   ```graphql
+   type User {
+     id: ID!
+     name: String!
+     email: String!
+     posts: [Post!]!
+   }
+
+   type Post {
+     id: ID!
+     title: String!
+     content: String!
+     author: User!
+   }
+
+   type Query {
+     user(id: ID!): User
+     users(limit: Int, offset: Int): [User!]!
+   }
+
+   type Mutation {
+     createUser(name: String!, email: String!): User!
+     updateUser(id: ID!, name: String, email: String): User!
+     deleteUser(id: ID!): Boolean!
+   }
+   ```
+
+2. **Query Design**
+   - Support flexible queries
+   - Avoid N+1 problems with DataLoader
+   - Implement pagination
+{% endif %}
+
+{% if generate_spec == 'openapi' %}
+### 3. OpenAPI Specification
+
+```yaml
+openapi: 3.0.0
+info:
+  title: {{ agent_name|title }} API
+  version: 1.0.0
+paths:
+  /api/v1/users:
+    get:
+      summary: List users
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+    post:
+      summary: Create user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: Created
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+```
+{% endif %}
+
+## Best Practices
+
+- **Consistency**: Use consistent naming and structure
+- **Documentation**: Comprehensive API documentation
+- **Versioning**: Plan for API evolution
+- **Security**: Authentication, authorization, rate limiting
+- **Performance**: Caching, pagination, compression
+- **Testing**: Automated API tests

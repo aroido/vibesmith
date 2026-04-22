@@ -1,0 +1,16 @@
+{
+  "placeholder": "Search components... (type to filter)",
+  "ariaSearchLabel": "Search components",
+  "ariaRemoveLabel": "Remove {{query}}",
+  "recentSearches": "Recent Searches",
+  "loading": "Loading...",
+  "noResultsFor": "No results found for \"{{query}}\"",
+  "typeToSearch": "Type to search components",
+  "ariaResultsLabel": "Search results",
+  "active": "Active",
+  "inactive": "Inactive",
+  "updated": "Updated {{date}}",
+  "navigate": "Navigate",
+  "select": "Select",
+  "close": "Close"
+}

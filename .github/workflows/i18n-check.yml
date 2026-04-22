@@ -1,0 +1,47 @@
+name: i18n Check
+
+# i18n missing/regression CI gate (#412)
+# - Validate t() key existence (ko/en locale)
+# - Warn on hardcoded strings (fails with --strict)
+# - ko/en smoke tests (Vitest)
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'packages/web/src/**'
+      - 'packages/web/scripts/check-i18n*.mjs'
+      - '.github/workflows/i18n-check.yml'
+  pull_request:
+    paths:
+      - 'packages/web/src/**'
+      - 'packages/web/scripts/check-i18n*.mjs'
+      - '.github/workflows/i18n-check.yml'
+
+jobs:
+  i18n-check:
+    name: i18n Keys & Smoke
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/web
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.19'
+          cache: 'npm'
+          cache-dependency-path: packages/web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check i18n (keys + hardcoded strings)
+        run: npm run check:i18n
+
+      - name: Run i18n smoke tests (ko/en)
+        run: npm run test -- --run src/i18n/__tests__/i18n.test.tsx

@@ -1,0 +1,151 @@
+# Skill: {{ skill_name }}
+
+## Description
+{{ description }}
+
+## Tools
+{% if tools %}
+{% for tool in tools %}
+- {{ tool }}
+{% endfor %}
+{% else %}
+- read
+- write
+{% endif %}
+
+## Context
+- project_structure
+- dependencies
+
+## Instructions
+
+1. **Analyze Requirements**
+   - Understand the component purpose and props
+   - Check existing component patterns in the project
+   - Review the project's UI library setup
+
+2. **Generate React Component**
+   - Component Type: {{ component_type|default('functional') }}
+{% if ui_library and ui_library != 'none' %}
+   - UI Library: {{ ui_library }}
+{% endif %}
+{% if features %}
+   - Features: {{ features|join(', ') }}
+{% endif %}
+
+3. **Follow Best Practices**
+{% if 'typescript' in features %}
+   - Use TypeScript for type safety
+   - Define proper interfaces for props
+{% endif %}
+{% if 'hooks' in features %}
+   - Use React Hooks (useState, useEffect, etc.)
+   - Create custom hooks when needed
+{% endif %}
+{% if 'props-validation' in features %}
+   - Add prop types or TypeScript interfaces
+{% endif %}
+   - Keep components small and focused
+   - Extract reusable logic into custom hooks
+   - Add proper accessibility attributes
+
+## Component Structure
+
+```tsx
+{% if 'typescript' in features %}
+import React{% if 'hooks' in features %}, { useState, useEffect }{% endif %} from 'react';
+{% if ui_library == 'chakra-ui' %}
+import { Box, Button, Text } from '@chakra-ui/react';
+{% elif ui_library == 'material-ui' %}
+import { Box, Button, Typography } from '@mui/material';
+{% endif %}
+
+interface {{ skill_name|title|replace('-', '') }}Props {
+  // Define your props here
+  title?: string;
+  onAction?: () => void;
+}
+
+export const {{ skill_name|title|replace('-', '') }}: React.FC<{{ skill_name|title|replace('-', '') }}Props> = ({
+  title = 'Default Title',
+  onAction,
+}) => {
+{% if 'hooks' in features %}
+  const [state, setState] = useState<string>('');
+
+  useEffect(() => {
+    // Side effects here
+  }, []);
+{% endif %}
+
+  return (
+    <Box>
+      <Text>{title}</Text>
+      {% if ui_library == 'chakra-ui' %}
+      <Button onClick={onAction}>Click Me</Button>
+      {% elif ui_library == 'material-ui' %}
+      <Button variant="contained" onClick={onAction}>Click Me</Button>
+      {% else %}
+      <button onClick={onAction}>Click Me</button>
+      {% endif %}
+    </Box>
+  );
+};
+{% else %}
+import React from 'react';
+
+export const {{ skill_name|title|replace('-', '') }} = ({ title, onAction }) => {
+  return (
+    <div>
+      <h2>{title}</h2>
+      <button onClick={onAction}>Click Me</button>
+    </div>
+  );
+};
+{% endif %}
+```
+
+## Best Practices
+
+{% if 'typescript' in features %}
+- **TypeScript**: Use strict type checking
+- **Interfaces**: Define clear prop interfaces
+- **Generic Types**: Use generics for reusable components
+{% endif %}
+
+{% if 'hooks' in features %}
+- **Hooks Rules**: Follow React Hooks rules
+- **Custom Hooks**: Extract complex logic into custom hooks
+- **Dependencies**: Always specify hook dependencies correctly
+{% endif %}
+
+{% if 'memo' in features %}
+- **Performance**: Use React.memo() for expensive components
+- **useMemo/useCallback**: Memoize values and callbacks when needed
+{% endif %}
+
+- **Composition**: Prefer composition over inheritance
+- **Props**: Keep props interface simple and focused
+- **Accessibility**: Add ARIA labels and proper semantic HTML
+- **Error Handling**: Handle edge cases gracefully
+
+## Testing
+
+```tsx
+import { render, screen, fireEvent } from '@testing-library/react';
+import { {{ skill_name|title|replace('-', '') }} } from './{{ skill_name|title|replace('-', '') }}';
+
+describe('{{ skill_name|title|replace('-', '') }}', () => {
+  it('renders with default props', () => {
+    render(<{{ skill_name|title|replace('-', '') }} />);
+    expect(screen.getByText('Default Title')).toBeInTheDocument();
+  });
+
+  it('calls onAction when button is clicked', () => {
+    const mockAction = jest.fn();
+    render(<{{ skill_name|title|replace('-', '') }} onAction={mockAction} />);
+    fireEvent.click(screen.getByRole('button'));
+    expect(mockAction).toHaveBeenCalledTimes(1);
+  });
+});
+```

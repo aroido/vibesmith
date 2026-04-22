@@ -1,0 +1,55 @@
+{
+  "appId": "com.vibesmith.app",
+  "productName": "VibeSmith",
+  "asar": true,
+  "directories": {
+    "output": "release"
+  },
+  "files": [
+    "out",
+    "resources",
+    "!out/**/*.map"
+  ],
+  "afterSign": "scripts/notarize.cjs",
+  "extraResources": [
+    {
+      "from": "../api/dist/vibesmith-api",
+      "to": "api/vibesmith-api"
+    }
+  ],
+  "mac": {
+    "target": {
+      "target": "default",
+      "arch": ["arm64"]
+    },
+    "artifactName": "${productName}-${version}.${ext}",
+    "icon": "resources/icon.icns",
+    "category": "public.app-category.developer-tools",
+    "hardenedRuntime": true,
+    "notarize": false,
+    "gatekeeperAssess": false,
+    "entitlements": "resources/entitlements.mac.plist",
+    "entitlementsInherit": "resources/entitlements.mac.plist"
+  },
+  "dmg": {
+    "contents": [
+      {
+        "x": 130,
+        "y": 220
+      },
+      {
+        "x": 410,
+        "y": 220,
+        "type": "link",
+        "path": "/Applications"
+      }
+    ]
+  },
+  "publish": [
+    {
+      "provider": "github",
+      "owner": "aroido",
+      "repo": "vibesmith"
+    }
+  ]
+}

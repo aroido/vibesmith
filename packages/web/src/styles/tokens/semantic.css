@@ -1,0 +1,81 @@
+:root {
+  /* Canonical semantic tokens (light mode default) */
+  --color-bg-canvas: #edf5f7;
+  --color-bg-surface: #ffffff;
+  --color-bg-elevated: #f4f9fb;
+  --color-bg-hover: #e8f1f5;
+
+  --color-fg-primary: #0d1e2c;
+  --color-fg-secondary: #3f5d70;
+  --color-fg-tertiary: #638094;
+  --color-fg-muted: #8ba3b1;
+
+  --color-border-default: #c7d6de;
+  --color-border-hover: #9db4bf;
+
+  --color-accent-primary: #0ba4b4;
+  --color-accent-primary-hover: #07879b;
+  --color-focus-ring: #0ba4b4;
+
+  --color-header-bg: rgba(243, 248, 250, 0.84);
+  --color-nav-bg: rgba(255, 255, 255, 0.78);
+  --color-nav-active: #0ba4b4;
+
+  --color-state-success: var(--primitive-success-500);
+  --color-state-warning: var(--primitive-warning-500);
+  --color-state-danger: var(--primitive-danger-500);
+
+  --color-code-inline: #be185d;
+  --color-code-bg: rgba(15, 23, 42, 0.06);
+
+  --color-bg-glow-primary: rgba(11, 164, 180, 0.16);
+  --color-bg-glow-secondary: rgba(255, 138, 36, 0.14);
+
+  /* Backward-compatible aliases */
+  --color-background: var(--color-bg-canvas);
+  --color-surface: var(--color-bg-surface);
+  --color-surface-elevated: var(--color-bg-elevated);
+  --color-surface-hover: var(--color-bg-hover);
+
+  --color-text-primary: var(--color-fg-primary);
+  --color-text-secondary: var(--color-fg-secondary);
+  --color-text-tertiary: var(--color-fg-tertiary);
+  --color-text-muted: var(--color-fg-muted);
+
+  --color-border: var(--color-border-default);
+  --color-primary: var(--color-accent-primary);
+  --color-primary-hover: var(--color-accent-primary-hover);
+
+  --color-card-bg: var(--color-bg-surface);
+  --color-card-border: var(--color-border-default);
+}
+
+.dark,
+:root[data-theme='dark'] {
+  --color-bg-canvas: #071326;
+  --color-bg-surface: #0d1f3a;
+  --color-bg-elevated: #142947;
+  --color-bg-hover: #1a3354;
+
+  --color-fg-primary: #f1f5f9;
+  --color-fg-secondary: #c9d8ea;
+  --color-fg-tertiary: #9eb5ce;
+  --color-fg-muted: #748ca9;
+
+  --color-border-default: rgba(158, 189, 224, 0.26);
+  --color-border-hover: rgba(194, 220, 250, 0.4);
+
+  --color-accent-primary: #43d9ff;
+  --color-accent-primary-hover: #14b7e4;
+  --color-focus-ring: #43d9ff;
+
+  --color-header-bg: rgba(7, 19, 38, 0.8);
+  --color-nav-bg: rgba(20, 41, 71, 0.76);
+  --color-nav-active: #43d9ff;
+
+  --color-code-inline: #e879f9;
+  --color-code-bg: rgba(139, 92, 246, 0.1);
+
+  --color-bg-glow-primary: rgba(67, 217, 255, 0.22);
+  --color-bg-glow-secondary: rgba(255, 138, 36, 0.16);
+}

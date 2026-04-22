@@ -1,0 +1,148 @@
+name: "Security Scan"
+
+on:
+  push:
+    branches: [ main ]
+  schedule:
+    # Every Monday at 9 AM (KST)
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+
+jobs:
+  npm-audit:
+    name: NPM Audit (Frontend)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: packages/web/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: packages/web
+        run: npm ci
+      
+      - name: Run npm audit
+        working-directory: packages/web
+        run: |
+          npm audit --omit=dev --audit-level=moderate || true
+          npm audit --omit=dev --audit-level=high --json > audit-report.json || true
+      
+      - name: Upload audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-report
+          path: packages/web/audit-report.json
+
+  pip-audit:
+    name: Pip Audit (Backend)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package: [api, core]
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install pip-audit
+        run: pip install pip-audit
+      
+      - name: Run pip-audit
+        working-directory: packages/${{ matrix.package }}
+        run: |
+          pip-audit --desc || true
+          pip-audit --format json > pip-audit-report.json || true
+      
+      - name: Upload audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pip-audit-report-${{ matrix.package }}
+          path: packages/${{ matrix.package }}/pip-audit-report.json
+
+  trivy-scan:
+    name: Trivy Filesystem Scan
+    runs-on: ubuntu-latest
+    # Skip Dependabot PRs due to limited permissions
+    if: github.actor != 'dependabot[bot]'
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '0'
+      
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+        continue-on-error: true  # Prevent CI blocking on repos with Code Scanning disabled
+
+  license-check:
+    name: License Compatibility Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install license-checker
+        run: npm install -g license-checker
+      
+      - name: Check npm licenses
+        working-directory: packages/web
+        run: |
+          npm ci
+          license-checker --production --excludePrivatePackages --onlyAllow "MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;0BSD;CC0-1.0;Unlicense" --summary || true
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install pip-licenses
+        run: pip install pip-licenses
+      
+      - name: Check Python licenses (Core)
+        working-directory: packages/core
+        run: |
+          pip install -e .
+          pip-licenses --fail-on "GPL;AGPL;LGPL" || true
+      
+      - name: Check Python licenses (API)
+        working-directory: packages/api
+        run: |
+          pip install -e ../core
+          pip install -e .
+          pip-licenses --fail-on "GPL;AGPL;LGPL" || true

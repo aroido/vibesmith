@@ -1,0 +1,50 @@
+{
+  "fields": [
+    {
+      "name": "agent_name",
+      "label": "에이전트 이름",
+      "type": "text",
+      "required": true,
+      "placeholder": "예: api-doc-writer",
+      "validation": {"pattern": "^[a-z0-9-]+$", "min_length": 3, "max_length": 50}
+    },
+    {
+      "name": "description",
+      "label": "설명",
+      "type": "textarea",
+      "required": true,
+      "validation": {"min_length": 10, "max_length": 500}
+    },
+    {
+      "name": "doc_types",
+      "label": "문서 타입",
+      "type": "multiselect",
+      "required": true,
+      "options": ["api", "user-guide", "developer-guide", "architecture", "changelog"],
+      "default": ["api"]
+    },
+    {
+      "name": "doc_format",
+      "label": "문서 형식",
+      "type": "select",
+      "required": false,
+      "options": ["markdown", "restructuredtext", "asciidoc"],
+      "default": "markdown"
+    },
+    {
+      "name": "include_examples",
+      "label": "예시 포함",
+      "type": "checkbox",
+      "required": false,
+      "default": true
+    },
+    {
+      "name": "skills",
+      "label": "사용 스킬",
+      "type": "multiselect",
+      "required": false,
+      "options": ["documentation"],
+      "default": ["documentation"]
+    }
+  ]
+}

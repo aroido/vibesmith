@@ -1,0 +1,14 @@
+{
+  "moderate": false,
+  "high": true,
+  "critical": true,
+  "allowlist": [
+    "GHSA-52f5-9888-hmc6"
+  ],
+  "report-type": "full",
+  "output-format": "text",
+  "summary": true,
+  "path-allowlist": [],
+  "package-manager": "auto",
+  "advisories-allowlist": []
+}

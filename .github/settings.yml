@@ -1,0 +1,74 @@
+# GitHub Repository Settings
+# https://github.com/probot/settings
+
+repository:
+  name: vibesmith
+  description: "Local-first manager for AI coding agent assets across desktop and web."
+  homepage: ""
+  topics: [ai, developer-tools, local-first, electron, react, fastapi, vite]
+  private: false
+  has_issues: true
+  has_projects: false
+  has_wiki: false
+  has_downloads: true
+  has_discussions: true
+  default_branch: main
+
+  delete_branch_on_merge: true
+
+  allow_squash_merge: true
+  allow_merge_commit: true
+  allow_rebase_merge: true
+  allow_auto_merge: true
+  
+  squash_merge_commit_title: COMMIT_OR_PR_TITLE
+  squash_merge_commit_message: COMMIT_MESSAGES
+  
+  merge_commit_title: MERGE_MESSAGE
+  merge_commit_message: PR_TITLE
+
+  enable_automated_security_fixes: true
+  enable_vulnerability_alerts: true
+
+  allow_update_branch: false
+
+branches:
+  - name: main
+    protection:
+      required_pull_request_reviews:
+        required_approving_review_count: 0
+        dismiss_stale_reviews: false
+        require_code_owner_reviews: false
+      required_status_checks:
+        strict: false
+        contexts: []
+      enforce_admins: false
+      required_linear_history: false
+      allow_auto_merge: true
+      restrictions: null
+
+labels:
+  - name: bug
+    color: d73a4a
+    description: Bug fix
+  - name: documentation
+    color: 0075ca
+    description: Documentation improvement
+  - name: enhancement
+    color: a2eeef
+    description: New feature or request
+  - name: frontend
+    color: 1d76db
+    description: Frontend related
+  - name: backend
+    color: fbca04
+    description: Backend related
+  - name: priority:high
+    color: d93f0b
+    description: High priority
+  - name: priority:medium
+    color: fbca04
+    description: Medium priority
+  - name: priority:low
+    color: 0e8a16
+    description: Low priority

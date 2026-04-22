@@ -1,0 +1,415 @@
+name: Release Desktop
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/release-desktop.yml'
+      - 'scripts/sync-homebrew-tap.mjs'
+      - 'scripts/check-distribution-consistency.sh'
+      - 'docs/distribution.md'
+      - 'packages/desktop/README.md'
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Git tag to publish (for example v0.5.4)
+        required: true
+        type: string
+
+concurrency:
+  group: release-${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+env:
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '20'
+  VITE_POSTHOG_HOST: ${{ vars.VITE_POSTHOG_HOST != '' && vars.VITE_POSTHOG_HOST || 'https://us.i.posthog.com' }}
+
+jobs:
+  release-workflow-check:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Set up Go for actionlint
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: Install actionlint
+        run: go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
+
+      - name: Lint release workflow
+        run: actionlint .github/workflows/release-desktop.yml
+
+      - name: Check distribution copy
+        run: ./scripts/check-distribution-consistency.sh
+
+      - name: Check Homebrew sync script syntax
+        run: node --check scripts/sync-homebrew-tap.mjs
+
+  verify-release:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+      VITE_POSTHOG_KEY: ${{ secrets.VITE_POSTHOG_KEY }}
+      VITE_POSTHOG_HOST: ${{ vars.VITE_POSTHOG_HOST != '' && vars.VITE_POSTHOG_HOST || 'https://us.i.posthog.com' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: |
+            packages/web/package-lock.json
+            packages/desktop/package-lock.json
+            packages/landing/package-lock.json
+
+      - name: Install Python dependencies
+        run: |
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip
+          pip install -e packages/core[dev] -e packages/api[dev]
+
+      - name: Install frontend dependencies
+        run: |
+          npm ci --prefix packages/web
+          npm ci --prefix packages/desktop
+          npm ci --prefix packages/landing
+
+      - name: Validate release tag matches desktop version
+        run: |
+          package_version="$(node -p "require('./packages/desktop/package.json').version")"
+          expected_tag="v${package_version}"
+          if [ "${RELEASE_TAG}" != "${expected_tag}" ]; then
+            echo "Release tag ${RELEASE_TAG} does not match packages/desktop/package.json version ${package_version}."
+            exit 1
+          fi
+
+      - name: Run full verification
+        run: PYTHON=python3.11 ./scripts/run-ai-verify --mode full
+
+  build-macos-release:
+    needs: verify-release
+    runs-on: macos-latest
+    env:
+      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+      VITE_POSTHOG_KEY: ${{ secrets.VITE_POSTHOG_KEY }}
+      VITE_POSTHOG_HOST: ${{ vars.VITE_POSTHOG_HOST != '' && vars.VITE_POSTHOG_HOST || 'https://us.i.posthog.com' }}
+      CSC_LINK: ${{ secrets.CSC_LINK }}
+      CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+      APPLE_SIGNING_CERT_BASE64: ${{ secrets.APPLE_SIGNING_CERT_BASE64 }}
+      APPLE_SIGNING_CERT_PASSWORD: ${{ secrets.APPLE_SIGNING_CERT_PASSWORD }}
+      APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+      APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+      APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+      APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: |
+            packages/web/package-lock.json
+            packages/desktop/package-lock.json
+
+      - name: Validate signing secrets
+        run: |
+          missing=0
+          has_legacy_cert=1
+          for name in CSC_LINK CSC_KEY_PASSWORD; do
+            if [ -z "${!name}" ]; then
+              has_legacy_cert=0
+            fi
+          done
+
+          has_new_cert=1
+          for name in APPLE_SIGNING_CERT_BASE64 APPLE_SIGNING_CERT_PASSWORD; do
+            if [ -z "${!name}" ]; then
+              has_new_cert=0
+            fi
+          done
+
+          if [ "$has_legacy_cert" -eq 0 ] && [ "$has_new_cert" -eq 0 ]; then
+            echo "Missing signing certificate secrets. Configure either CSC_LINK/CSC_KEY_PASSWORD or APPLE_SIGNING_CERT_BASE64/APPLE_SIGNING_CERT_PASSWORD."
+            missing=1
+          fi
+
+          has_api_key_auth=1
+          for name in APPLE_API_KEY APPLE_API_KEY_ID APPLE_API_ISSUER; do
+            if [ -z "${!name}" ]; then
+              has_api_key_auth=0
+            fi
+          done
+
+          has_apple_id_auth=1
+          if [ -z "${APPLE_ID}" ] || [ -z "${APPLE_TEAM_ID}" ] || { [ -z "${APPLE_APP_SPECIFIC_PASSWORD}" ] && [ -z "${APPLE_ID_PASSWORD}" ]; }; then
+            has_apple_id_auth=0
+          fi
+
+          if [ "$has_api_key_auth" -eq 0 ] && [ "$has_apple_id_auth" -eq 0 ]; then
+            echo "Missing Apple notarization credentials. Configure either APPLE_API_KEY/APPLE_API_KEY_ID/APPLE_API_ISSUER or APPLE_ID/(APPLE_APP_SPECIFIC_PASSWORD or APPLE_ID_PASSWORD)/APPLE_TEAM_ID."
+            missing=1
+          fi
+
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Prepare signing certificate
+        if: ${{ env.APPLE_SIGNING_CERT_BASE64 != '' && env.APPLE_SIGNING_CERT_PASSWORD != '' }}
+        run: |
+          export CERT_PATH="${RUNNER_TEMP}/vibesmith-signing-cert.p12"
+          python3 - <<'PY'
+          import base64
+          import os
+          from pathlib import Path
+
+          cert_path = Path(os.environ["CERT_PATH"])
+          cert_path.write_bytes(base64.b64decode(os.environ["APPLE_SIGNING_CERT_BASE64"]))
+          PY
+          echo "CSC_LINK=${CERT_PATH}" >> "$GITHUB_ENV"
+          echo "CSC_KEY_PASSWORD=${APPLE_SIGNING_CERT_PASSWORD}" >> "$GITHUB_ENV"
+
+      - name: Install Python dependencies
+        run: |
+          cd packages/api
+          python3 -m venv .venv-release
+          source .venv-release/bin/activate
+          pip install --upgrade pip
+          pip install -e ../core -e . pyinstaller
+
+      - name: Build API executable
+        run: |
+          cd packages/api
+          source .venv-release/bin/activate
+          python3 build_api_executable.py
+
+      - name: Install web dependencies
+        run: npm ci --prefix packages/web
+
+      - name: Build web
+        run: npm --prefix packages/web run build
+
+      - name: Install desktop dependencies
+        run: npm ci --prefix packages/desktop
+
+      - name: Build desktop release artifacts
+        env:
+          CSC_LINK: ${{ env.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ env.CSC_KEY_PASSWORD }}
+          APPLE_API_KEY: ${{ env.APPLE_API_KEY }}
+          APPLE_API_KEY_ID: ${{ env.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ env.APPLE_API_ISSUER }}
+          VIBESMITH_APPLE_ID: ${{ env.APPLE_ID }}
+          VIBESMITH_APPLE_APP_SPECIFIC_PASSWORD: ${{ env.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_ID_PASSWORD: ${{ env.APPLE_ID_PASSWORD }}
+          VIBESMITH_APPLE_TEAM_ID: ${{ env.APPLE_TEAM_ID }}
+        run: |
+          cd packages/desktop
+          if [ -z "${APPLE_APP_SPECIFIC_PASSWORD:-}" ] && [ -n "${APPLE_ID_PASSWORD:-}" ]; then
+            export APPLE_APP_SPECIFIC_PASSWORD="${APPLE_ID_PASSWORD}"
+          fi
+          if [ -z "${VIBESMITH_APPLE_APP_SPECIFIC_PASSWORD:-}" ] && [ -n "${APPLE_ID_PASSWORD:-}" ]; then
+            export VIBESMITH_APPLE_APP_SPECIFIC_PASSWORD="${APPLE_ID_PASSWORD}"
+          fi
+          npm run build
+          npx electron-builder --mac --publish never
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p release-assets
+          while IFS= read -r asset; do
+            cp "$asset" release-assets/
+          done < <(find packages/desktop/release -type f \( -name '*.dmg' -o -name '*.zip' -o -name '*.blockmap' -o -name '*mac*.yml' \))
+
+          dmg_path="$(find release-assets -maxdepth 1 -type f -name '*.dmg' | head -n 1)"
+          if [ -z "$dmg_path" ]; then
+            echo "No DMG artifact found."
+            exit 1
+          fi
+
+          cp "$dmg_path" release-assets/VibeSmith.dmg
+
+          (
+            cd release-assets
+            shasum -a 256 -- * > SHA256SUMS.txt
+            ls -lh
+          )
+
+      - name: Detect prerelease tag
+        id: release_meta
+        run: |
+          if [[ "${RELEASE_TAG}" =~ -(alpha|beta|rc)\.[0-9]+$ ]]; then
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: VibeSmith ${{ env.RELEASE_TAG }}
+          target_commitish: ${{ github.sha }}
+          generate_release_notes: true
+          prerelease: ${{ steps.release_meta.outputs.prerelease }}
+          files: |
+            release-assets/*
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-assets-${{ env.RELEASE_TAG }}
+          path: release-assets/*
+          retention-days: 14
+
+  verify-published-macos-release:
+    needs: build-macos-release
+    runs-on: macos-latest
+    env:
+      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+      VITE_POSTHOG_HOST: ${{ vars.VITE_POSTHOG_HOST != '' && vars.VITE_POSTHOG_HOST || 'https://us.i.posthog.com' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: packages/desktop/package-lock.json
+
+      - name: Install desktop dependencies
+        run: npm ci --prefix packages/desktop
+
+      - name: Verify published macOS release artifact
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          VIBESMITH_RELEASE_VERIFY_OUTPUT_DIR: ${{ runner.temp }}/release-verify-report
+        run: |
+          node packages/desktop/scripts/verify-published-macos-release.cjs \
+            --repo "${GITHUB_REPOSITORY}" \
+            --tag "${RELEASE_TAG}" \
+            --output-dir "${VIBESMITH_RELEASE_VERIFY_OUTPUT_DIR}"
+
+      - name: Append release verification summary
+        if: always()
+        run: |
+          summary_path="${RUNNER_TEMP}/release-verify-report/summary.md"
+          if [ -f "${summary_path}" ]; then
+            cat "${summary_path}" >> "${GITHUB_STEP_SUMMARY}"
+          fi
+
+      - name: Upload release verification report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-verification-${{ env.RELEASE_TAG }}
+          path: ${{ runner.temp }}/release-verify-report/*
+          retention-days: 14
+
+  sync-homebrew-tap:
+    needs: verify-published-macos-release
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+      HOMEBREW_TAP_REPO: aroido/homebrew-vibesmith
+      HOMEBREW_TAP_PATH: Casks/vibesmith.rb
+      HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Check Homebrew tap token
+        id: homebrew_token
+        run: |
+          if [ -z "${HOMEBREW_TAP_GITHUB_TOKEN}" ]; then
+            echo "::warning title=Homebrew tap sync skipped::Missing HOMEBREW_TAP_GITHUB_TOKEN. Configure a token with contents:write access to ${HOMEBREW_TAP_REPO}, or sync the tap manually with scripts/sync-homebrew-tap.mjs."
+            {
+              echo "### Homebrew tap sync skipped"
+              echo ""
+              echo "The release artifacts were published and verified, but the tap sync was skipped because \`HOMEBREW_TAP_GITHUB_TOKEN\` is not configured."
+              echo ""
+              echo "Configure a token with contents:write access to \`${HOMEBREW_TAP_REPO}\`, or manually update \`${HOMEBREW_TAP_PATH}\` from this release:"
+              echo ""
+              echo "\`\`\`bash"
+              echo "node scripts/sync-homebrew-tap.mjs --tag \"${RELEASE_TAG}\" --dry-run"
+              echo "\`\`\`"
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "available=true" >> "$GITHUB_OUTPUT"
+
+      - name: Sync Homebrew tap to GitHub release
+        if: steps.homebrew_token.outputs.available == 'true'
+        run: |
+          node scripts/sync-homebrew-tap.mjs \
+            --repo "${GITHUB_REPOSITORY}" \
+            --tag "${RELEASE_TAG}" \
+            --tap-repo "${HOMEBREW_TAP_REPO}" \
+            --tap-path "${HOMEBREW_TAP_PATH}" \
+            --token "${HOMEBREW_TAP_GITHUB_TOKEN}"
+
+      - name: Record Homebrew tap sync
+        if: steps.homebrew_token.outputs.available == 'true'
+        run: |
+          echo "Homebrew tap ${HOMEBREW_TAP_REPO}/${HOMEBREW_TAP_PATH} synced for ${RELEASE_TAG}." >> "$GITHUB_STEP_SUMMARY"

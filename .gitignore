@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+*.db
+.coverage
+
+# Node
+node_modules/
+packages/web/dist/
+packages/landing/.next/
+packages/desktop/out/
+packages/desktop/release/
+
+# Local env and secrets
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+*.p12
+*.pfx
+secrets/
+credentials.json
+
+# Local reports and caches
+.DS_Store
+.build/
+.tmp/
+.pytest_cache/
+.ruff_cache/
+coverage/
+playwright-report/
+test-results/
+*-audit-report.json
+trivy-results.sarif
+security-scan-*.json

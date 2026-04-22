@@ -1,0 +1,20 @@
+{
+  "primary": {
+    "home": "홈",
+    "projects": "프로젝트",
+    "components": "컴포넌트",
+    "settings": "설정"
+  },
+  "secondary": {
+    "usage": "사용 통계",
+    "team": "팀",
+    "backup": "백업",
+    "trash": "휴지통",
+    "dependencyGraph": "종속성 그래프"
+  },
+  "legacy": {
+    "dashboard": "대시보드",
+    "dependencies": "종속성 그래프"
+  },
+  "mainMenu": "주요 메뉴"
+}

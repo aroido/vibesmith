@@ -1,0 +1,406 @@
+:root {
+  --component-card-bg: var(--color-bg-surface);
+  --component-card-border: var(--color-border-default);
+  --component-surface-elevated: var(--color-bg-elevated);
+  --component-surface-hover: var(--color-bg-hover);
+  --component-overlay-alpha-soft: 20%;
+  --component-overlay-alpha-border: 45%;
+}
+
+@layer utilities {
+  .bg-theme-surface {
+    background-color: var(--component-card-bg);
+  }
+
+  .bg-theme-canvas {
+    background-color: var(--color-bg-canvas);
+  }
+
+  .bg-theme-elevated {
+    background-color: var(--component-surface-elevated);
+  }
+
+  .bg-theme-hover {
+    background-color: var(--component-surface-hover);
+  }
+
+  .bg-theme-success {
+    background-color: var(--color-state-success);
+  }
+
+  .bg-theme-muted {
+    background-color: var(--color-fg-tertiary);
+  }
+
+  .text-theme-primary {
+    color: var(--color-fg-primary);
+  }
+
+  .text-theme-secondary {
+    color: var(--color-fg-secondary);
+  }
+
+  .text-theme-tertiary {
+    color: var(--color-fg-tertiary);
+  }
+
+  .border-theme {
+    border-color: var(--component-card-border);
+  }
+
+  .divider-theme {
+    background-color: var(--component-card-border);
+  }
+
+  .bg-theme-skeleton {
+    background-color: var(--component-surface-elevated);
+  }
+
+  .bg-theme-shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--color-fg-primary) 12%, transparent),
+      transparent
+    );
+    background-size: 200% 100%;
+  }
+
+  .text-theme-success {
+    color: var(--color-state-success);
+  }
+
+  .text-theme-warning {
+    color: var(--color-state-warning);
+  }
+
+  .text-theme-danger {
+    color: var(--color-state-danger);
+  }
+
+  .alert-theme-info {
+    background-color: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-primary) 32%, transparent);
+    color: var(--color-primary);
+  }
+
+  .alert-theme-success {
+    background-color: color-mix(in srgb, var(--color-state-success) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-state-success) 32%, transparent);
+    color: var(--color-state-success);
+  }
+
+  .alert-theme-warning {
+    background-color: color-mix(in srgb, var(--color-state-warning) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-state-warning) 32%, transparent);
+    color: var(--color-state-warning);
+  }
+
+  .alert-theme-danger {
+    background-color: color-mix(in srgb, var(--color-state-danger) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-state-danger) 32%, transparent);
+    color: var(--color-state-danger);
+  }
+
+  .btn-theme-primary-soft {
+    background: linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--color-primary) 22%, transparent),
+      color-mix(in srgb, var(--color-surface) 90%, transparent)
+    );
+    border: 1px solid color-mix(in srgb, var(--color-primary) 52%, transparent);
+    color: var(--color-text-primary);
+    box-shadow: 0 8px 16px color-mix(in srgb, var(--color-primary) 18%, transparent);
+  }
+
+  .btn-theme-primary-soft:hover {
+    background: linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--color-primary) 30%, transparent),
+      color-mix(in srgb, var(--color-surface) 92%, transparent)
+    );
+    transform: translateY(-1px);
+  }
+
+  .btn-theme-danger-soft {
+    background-color: color-mix(in srgb, var(--color-state-danger) 18%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-state-danger) 46%, transparent);
+    color: var(--color-state-danger);
+  }
+
+  .btn-theme-danger-soft:hover {
+    background-color: color-mix(in srgb, var(--color-state-danger) 26%, transparent);
+  }
+
+  .btn-theme-warning-soft {
+    background-color: color-mix(in srgb, var(--color-state-warning) 18%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-state-warning) 46%, transparent);
+    color: var(--color-state-warning);
+  }
+
+  .btn-theme-warning-soft:hover {
+    background-color: color-mix(in srgb, var(--color-state-warning) 26%, transparent);
+  }
+
+  .btn-theme-surface {
+    background-color: color-mix(in srgb, var(--component-card-bg) 82%, transparent);
+    border: 1px solid var(--component-card-border);
+    color: var(--color-fg-secondary);
+  }
+
+  .btn-theme-surface:hover {
+    background-color: var(--component-surface-hover);
+    color: var(--color-fg-primary);
+    transform: translateY(-1px);
+    border-color: var(--color-border-hover);
+  }
+
+  .panel-theme-status {
+    background: linear-gradient(
+      120deg,
+      color-mix(in srgb, var(--component-surface-elevated) 90%, transparent),
+      color-mix(in srgb, var(--component-card-bg) 92%, transparent)
+    );
+    border: 1px solid color-mix(in srgb, var(--color-primary) 30%, var(--component-card-border));
+  }
+
+  .panel-theme-status-glow {
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--color-primary) 16%, transparent),
+      color-mix(in srgb, var(--color-state-success) 14%, transparent),
+      color-mix(in srgb, var(--color-primary) 16%, transparent)
+    );
+  }
+
+  .panel-theme-search {
+    border: 1px solid color-mix(in srgb, var(--color-primary) 30%, var(--component-card-border));
+    box-shadow: 0 10px 40px color-mix(in srgb, var(--color-primary) 20%, transparent);
+  }
+
+  .row-theme-active {
+    background-color: color-mix(in srgb, var(--color-primary) 16%, transparent);
+    border-left: 4px solid var(--color-primary);
+  }
+
+  .input-theme {
+    background-color: var(--component-card-bg);
+    border: 1px solid var(--component-card-border);
+    color: var(--color-fg-primary);
+  }
+
+  .input-theme::placeholder {
+    color: var(--color-fg-tertiary);
+  }
+
+  .input-theme:focus {
+    outline: 2px solid color-mix(in srgb, var(--color-focus-ring) 55%, transparent);
+    outline-offset: 1px;
+  }
+
+  .btn-icon-theme {
+    border: 1px solid color-mix(in srgb, var(--component-card-border) 90%, transparent);
+    background-color: color-mix(in srgb, var(--component-card-bg) 80%, transparent);
+    color: var(--color-fg-secondary);
+    backdrop-filter: blur(8px);
+    transition: transform 0.2s ease, border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease;
+  }
+
+  .btn-icon-theme:hover {
+    background-color: var(--component-surface-hover);
+    border-color: var(--color-border-hover);
+    color: var(--color-fg-primary);
+    transform: translateY(-1px);
+  }
+
+  .badge-theme-success {
+    background-color: color-mix(in srgb, var(--color-state-success) 18%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-state-success) 44%, transparent);
+    color: var(--color-state-success);
+  }
+
+  .badge-theme-info {
+    background-color: color-mix(in srgb, var(--color-primary) 18%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-primary) 44%, transparent);
+    color: var(--color-primary);
+  }
+
+  .badge-theme-warning {
+    background-color: color-mix(in srgb, var(--color-state-warning) 18%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-state-warning) 44%, transparent);
+    color: var(--color-state-warning);
+  }
+
+  .badge-theme-danger {
+    background-color: color-mix(in srgb, var(--color-state-danger) 18%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-state-danger) 44%, transparent);
+    color: var(--color-state-danger);
+  }
+
+  .badge-theme-muted {
+    background-color: color-mix(in srgb, var(--color-fg-secondary) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-fg-secondary) 34%, transparent);
+    color: var(--color-fg-secondary);
+  }
+
+  /* ── Toggle switch ── */
+
+  .toggle-theme-track {
+    background: color-mix(in srgb, var(--color-fg-secondary) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-fg-secondary) 28%, transparent);
+    transition: background 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .toggle-theme-track[aria-checked="true"] {
+    background: linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--color-state-success) 38%, transparent),
+      color-mix(in srgb, var(--color-state-success) 24%, transparent)
+    );
+    border-color: color-mix(in srgb, var(--color-state-success) 52%, transparent);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--color-state-success) 22%, transparent);
+  }
+
+  .toggle-theme-track:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--color-fg-secondary) 44%, transparent);
+  }
+
+  .toggle-theme-track[aria-checked="true"]:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--color-state-success) 64%, transparent);
+    box-shadow: 0 0 14px color-mix(in srgb, var(--color-state-success) 30%, transparent);
+  }
+
+  .toggle-theme-thumb {
+    background: linear-gradient(145deg, #fff, #f0f0f0);
+    box-shadow:
+      0 1px 4px color-mix(in srgb, var(--color-fg-primary) 18%, transparent),
+      0 0 0 0.5px color-mix(in srgb, var(--color-fg-primary) 8%, transparent);
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .dark .toggle-theme-thumb {
+    background: linear-gradient(145deg, #e8ecef, #d1d5db);
+  }
+
+  .usage-heat-level-0 {
+    background-color: var(--component-surface-hover);
+  }
+
+  .usage-heat-level-1 {
+    background-color: color-mix(in srgb, var(--color-primary) 25%, var(--component-surface-hover));
+  }
+
+  .usage-heat-level-2 {
+    background-color: color-mix(in srgb, var(--color-primary) 45%, var(--component-surface-hover));
+  }
+
+  .usage-heat-level-3 {
+    background-color: color-mix(in srgb, var(--color-primary) 65%, var(--component-surface-hover));
+  }
+
+  .usage-heat-level-4 {
+    background-color: color-mix(in srgb, var(--color-primary) 85%, var(--component-surface-hover));
+  }
+
+  .usage-v2-summary-card {
+    background:
+      linear-gradient(
+        140deg,
+        color-mix(in srgb, var(--component-card-bg) 84%, transparent),
+        color-mix(in srgb, var(--component-surface-elevated) 92%, transparent)
+      );
+    border-color: color-mix(in srgb, var(--color-border-hover) 58%, var(--component-card-border));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-fg-primary) 7%, transparent);
+  }
+
+  .usage-v2-mode-switch {
+    background: color-mix(in srgb, var(--component-surface-elevated) 88%, transparent);
+    border-color: color-mix(in srgb, var(--color-border-hover) 56%, var(--component-card-border));
+  }
+
+  .usage-v2-mode-btn {
+    color: var(--color-fg-secondary);
+  }
+
+  .usage-v2-mode-btn-active {
+    background:
+      linear-gradient(
+        145deg,
+        color-mix(in srgb, var(--color-primary) 22%, transparent),
+        color-mix(in srgb, var(--component-card-bg) 94%, transparent)
+      );
+    border: 1px solid color-mix(in srgb, var(--color-primary) 48%, transparent);
+    color: var(--color-fg-primary);
+    box-shadow:
+      0 4px 16px color-mix(in srgb, var(--color-primary) 22%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--color-fg-primary) 7%, transparent);
+  }
+
+  .usage-v2-insight-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.36rem;
+  }
+
+  .usage-v2-insight-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--color-border-hover) 58%, transparent);
+    background:
+      linear-gradient(
+        120deg,
+        color-mix(in srgb, var(--color-primary) 12%, transparent),
+        color-mix(in srgb, var(--component-card-bg) 92%, transparent)
+      );
+    color: var(--color-fg-secondary);
+    padding: 0.38rem 0.72rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    letter-spacing: 0.01em;
+    font-weight: 600;
+  }
+
+  .usage-v2-chart-stage {
+    border-color: color-mix(in srgb, var(--color-border-hover) 58%, var(--component-card-border));
+    background:
+      radial-gradient(circle at 11% 13%, color-mix(in srgb, var(--color-primary) 11%, transparent), transparent 45%),
+      radial-gradient(circle at 86% 11%, color-mix(in srgb, var(--color-state-success) 9%, transparent), transparent 42%),
+      linear-gradient(
+        145deg,
+        color-mix(in srgb, var(--component-card-bg) 86%, transparent),
+        color-mix(in srgb, var(--component-surface-elevated) 92%, transparent)
+      );
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--color-fg-primary) 7%, transparent),
+      0 8px 24px color-mix(in srgb, var(--color-fg-primary) 8%, transparent);
+  }
+
+  .usage-v2-chart-stage::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(to right, color-mix(in srgb, var(--color-border-hover) 42%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, var(--color-border-hover) 42%, transparent) 1px, transparent 1px);
+    background-size: 28px 28px;
+    opacity: 0.2;
+    mask-image: radial-gradient(circle at center, black 12%, transparent 78%);
+  }
+
+  .usage-v2-tooltip {
+    background:
+      linear-gradient(
+        140deg,
+        color-mix(in srgb, var(--component-card-bg) 92%, transparent),
+        color-mix(in srgb, var(--component-surface-elevated) 94%, transparent)
+      );
+    border-color: color-mix(in srgb, var(--color-border-hover) 62%, var(--component-card-border));
+    backdrop-filter: blur(8px);
+    box-shadow: 0 16px 36px color-mix(in srgb, var(--color-fg-primary) 16%, transparent);
+  }
+}

@@ -1,0 +1,215 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$ROOT_DIR"
+
+MODE="fast"
+CHANGED_ONLY="false"
+JSON_OUTPUT="false"
+
+usage() {
+  cat <<USAGE
+Usage: ./scripts/ai-verify [options]
+
+Options:
+  --mode <fast|full>     Verification profile (default: fast)
+  --changed-only         Run checks only for changed components
+  --json                 Output summary as JSON
+  -h, --help             Show this help
+USAGE
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --mode)
+      MODE="${2:-}"
+      shift 2
+      ;;
+    --changed-only)
+      CHANGED_ONLY="true"
+      shift
+      ;;
+    --json)
+      JSON_OUTPUT="true"
+      shift
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1" >&2
+      usage
+      exit 1
+      ;;
+  esac
+done
+
+if [[ "$MODE" != "fast" && "$MODE" != "full" ]]; then
+  echo "--mode must be fast or full" >&2
+  exit 1
+fi
+
+run_python="false"
+run_web="false"
+run_desktop="false"
+run_landing="false"
+
+if [[ "$CHANGED_ONLY" == "false" ]]; then
+  run_python="true"
+  run_web="true"
+  run_desktop="true"
+  run_landing="true"
+else
+  changed_files="$( (git diff --name-only HEAD; git ls-files --others --exclude-standard) | sort -u )"
+  if [[ -z "$changed_files" ]]; then
+    if [[ "$JSON_OUTPUT" == "true" ]]; then
+      printf '{"mode":"%s","changed_only":true,"checks":[],"passed":0,"failed":0,"success":true}\n' "$MODE"
+    else
+      echo "No changed files detected; nothing to verify."
+    fi
+    exit 0
+  fi
+
+  while IFS= read -r file; do
+    [[ -z "$file" ]] && continue
+    case "$file" in
+      packages/core/*|packages/api/*|pyproject.toml)
+        run_python="true"
+        ;;
+      packages/web/*)
+        run_web="true"
+        ;;
+      packages/desktop/*)
+        run_desktop="true"
+        ;;
+      packages/landing/*)
+        run_landing="true"
+        ;;
+      *)
+        run_python="true"
+        run_web="true"
+        run_desktop="true"
+        run_landing="true"
+        ;;
+    esac
+  done <<< "$changed_files"
+fi
+
+declare -a CHECK_LABELS
+DECLARE_CMDS_FILE="$(mktemp)"
+RESULTS_FILE="$(mktemp)"
+trap 'rm -f "$DECLARE_CMDS_FILE" "$RESULTS_FILE"' EXIT
+
+add_check() {
+  local label="$1"
+  local cmd="$2"
+  CHECK_LABELS+=("$label")
+  printf '%s\t%s\n' "$label" "$cmd" >> "$DECLARE_CMDS_FILE"
+}
+
+if [[ "$MODE" == "fast" ]]; then
+  add_check "release:distribution-copy" "./scripts/check-distribution-consistency.sh"
+  add_check "release:homebrew-sync-script" "node --check scripts/sync-homebrew-tap.mjs"
+  if [[ "$run_python" == "true" ]]; then
+    add_check "python:lint" "make lint-python"
+    add_check "python:test-core" "make test-core"
+    add_check "python:test-api" "make test-api"
+  fi
+  if [[ "$run_web" == "true" ]]; then
+    add_check "web:lint" "cd packages/web && npm run lint"
+    add_check "web:typecheck" "cd packages/web && npm run type-check"
+  fi
+  if [[ "$run_desktop" == "true" ]]; then
+    add_check "desktop:lint" "cd packages/desktop && npm run lint"
+    add_check "desktop:typecheck" "cd packages/desktop && npm run type-check"
+  fi
+  if [[ "$run_landing" == "true" ]]; then
+    add_check "landing:lint" "cd packages/landing && npm run lint"
+  fi
+else
+  add_check "release:distribution-copy" "./scripts/check-distribution-consistency.sh"
+  add_check "release:homebrew-sync-script" "node --check scripts/sync-homebrew-tap.mjs"
+  if [[ "$run_python" == "true" ]]; then
+    add_check "python:lint" "make lint-python"
+    add_check "python:test" "make test"
+    add_check "python:smoke-compile" "python3 -m compileall -q -x '/(\\.venv|\\.venv-pure|venv)/' packages/core packages/api"
+  fi
+  if [[ "$run_web" == "true" ]]; then
+    add_check "web:lint" "cd packages/web && npm run lint"
+    add_check "web:typecheck" "cd packages/web && npm run type-check"
+    add_check "web:test" "cd packages/web && npm run test -- --run"
+    add_check "web:build" "cd packages/web && npm run build"
+  fi
+  if [[ "$run_desktop" == "true" ]]; then
+    add_check "desktop:lint" "cd packages/desktop && npm run lint"
+    add_check "desktop:typecheck" "cd packages/desktop && npm run type-check"
+    add_check "desktop:test-readiness" "cd packages/desktop && npm run test:readiness"
+    add_check "desktop:build" "cd packages/desktop && npm run build"
+  fi
+  if [[ "$run_landing" == "true" ]]; then
+    add_check "landing:lint" "cd packages/landing && npm run lint"
+    add_check "landing:build" "cd packages/landing && npm run build"
+  fi
+fi
+
+if [[ ! -s "$DECLARE_CMDS_FILE" ]]; then
+  if [[ "$JSON_OUTPUT" == "true" ]]; then
+    printf '{"mode":"%s","changed_only":%s,"checks":[],"passed":0,"failed":0,"success":true}\n' "$MODE" "$CHANGED_ONLY"
+  else
+    echo "No checks selected for mode=$MODE changed_only=$CHANGED_ONLY"
+  fi
+  exit 0
+fi
+
+passed=0
+failed=0
+
+while IFS=$'\t' read -r label cmd; do
+  start_ts="$(date +%s)"
+
+  if [[ "$JSON_OUTPUT" != "true" ]]; then
+    echo "==> [$label]"
+    echo "    $cmd"
+  fi
+
+  if bash -lc "$cmd"; then
+    status="pass"
+    passed=$((passed + 1))
+  else
+    status="fail"
+    failed=$((failed + 1))
+  fi
+
+  end_ts="$(date +%s)"
+  duration="$((end_ts - start_ts))"
+  printf '%s\t%s\t%s\t%s\n' "$label" "$status" "$duration" "$cmd" >> "$RESULTS_FILE"
+done < "$DECLARE_CMDS_FILE"
+
+if [[ "$JSON_OUTPUT" == "true" && $(command -v jq >/dev/null 2>&1; echo $?) -eq 0 ]]; then
+  jq -Rn \
+    --arg mode "$MODE" \
+    --argjson changed_only "$([ "$CHANGED_ONLY" == "true" ] && echo true || echo false)" \
+    --argjson passed "$passed" \
+    --argjson failed "$failed" \
+    '
+      [inputs | split("\t") | {label: .[0], status: .[1], duration_sec: (.[2] | tonumber), command: .[3]}] as $checks
+      | {
+          mode: $mode,
+          changed_only: $changed_only,
+          checks: $checks,
+          passed: $passed,
+          failed: $failed,
+          success: ($failed == 0)
+        }
+    ' < "$RESULTS_FILE"
+else
+  echo
+  echo "Verification summary: mode=$MODE changed_only=$CHANGED_ONLY passed=$passed failed=$failed"
+fi
+
+if [[ "$failed" -gt 0 ]]; then
+  exit 1
+fi

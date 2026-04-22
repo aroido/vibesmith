@@ -1,0 +1,66 @@
+{
+  "fields": [
+    {
+      "name": "skill_name",
+      "label": "스킬 이름",
+      "type": "text",
+      "required": true,
+      "placeholder": "예: chakra-form-builder",
+      "help_text": "React 컴포넌트 생성 스킬의 고유한 이름",
+      "validation": {
+        "pattern": "^[a-z0-9-]+$",
+        "message": "소문자, 숫자, 하이픈만 사용 가능합니다",
+        "min_length": 3,
+        "max_length": 50
+      }
+    },
+    {
+      "name": "description",
+      "label": "설명",
+      "type": "textarea",
+      "required": true,
+      "placeholder": "이 스킬이 생성하는 React 컴포넌트의 종류를 설명하세요",
+      "help_text": "예: 'Chakra UI를 사용한 폼 컴포넌트 생성'",
+      "validation": {
+        "min_length": 10,
+        "max_length": 500
+      }
+    },
+    {
+      "name": "component_type",
+      "label": "컴포넌트 타입",
+      "type": "select",
+      "required": true,
+      "options": ["functional", "class"],
+      "default": "functional",
+      "help_text": "함수형 또는 클래스형 컴포넌트"
+    },
+    {
+      "name": "ui_library",
+      "label": "UI 라이브러리",
+      "type": "select",
+      "required": false,
+      "options": ["chakra-ui", "material-ui", "tailwind", "styled-components", "none"],
+      "default": "chakra-ui",
+      "help_text": "사용할 UI 라이브러리 선택"
+    },
+    {
+      "name": "features",
+      "label": "포함 기능",
+      "type": "multiselect",
+      "required": false,
+      "options": ["typescript", "hooks", "context", "props-validation", "error-boundary", "memo"],
+      "default": ["typescript", "hooks"],
+      "help_text": "컴포넌트에 포함할 기능들"
+    },
+    {
+      "name": "tools",
+      "label": "허용 도구",
+      "type": "multiselect",
+      "required": false,
+      "options": ["read", "write", "search"],
+      "default": ["read", "write"],
+      "help_text": "이 스킬이 사용할 수 있는 도구"
+    }
+  ]
+}

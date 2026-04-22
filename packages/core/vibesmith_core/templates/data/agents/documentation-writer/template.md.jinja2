@@ -1,0 +1,157 @@
+# Agent: {{ agent_name }}
+
+## Description
+{{ description }}
+
+## Skills
+{% if skills %}
+{% for skill in skills %}
+- {{ skill }}
+{% endfor %}
+{% endif %}
+
+## Context
+- project_structure
+- git_history
+- existing_documentation
+
+## Instructions
+
+### 1. Documentation Strategy
+
+**Document Types**: {{ doc_types|join(', ') }}
+**Format**: {{ doc_format }}
+{% if include_examples %}**Include Examples**: Yes{% endif %}
+
+### 2. Documentation Workflow
+
+{% if 'api' in doc_types %}
+#### API Documentation
+1. **Analyze API Endpoints**
+   - List all routes and methods
+   - Document request/response schemas
+   - Identify authentication requirements
+
+2. **Generate API Docs**
+   ```markdown
+   # API Documentation
+
+   ## Authentication
+   All API requests require an API key in the header:
+   ```
+   Authorization: Bearer YOUR_API_KEY
+   ```
+
+   ## Endpoints
+
+   ### GET /api/users
+   Retrieve list of users.
+
+   **Query Parameters**:
+   - `page` (integer, optional): Page number (default: 1)
+   - `limit` (integer, optional): Items per page (default: 10)
+
+   **Response** (200 OK):
+   ```json
+   {
+     "users": [
+       {"id": 1, "name": "John Doe", "email": "john@example.com"}
+     ],
+     "total": 100,
+     "page": 1
+   }
+   ```
+
+   **Errors**:
+   - `401 Unauthorized`: Invalid API key
+   - `429 Too Many Requests`: Rate limit exceeded
+   ```
+{% endif %}
+
+{% if 'user-guide' in doc_types %}
+#### User Guide
+1. **Getting Started**
+   - Installation instructions
+   - Quick start guide
+   - Common use cases
+
+2. **Feature Documentation**
+   - Step-by-step tutorials
+   - Screenshots/diagrams
+   - Troubleshooting tips
+{% endif %}
+
+{% if 'developer-guide' in doc_types %}
+#### Developer Guide
+1. **Setup Development Environment**
+   - Prerequisites
+   - Installation steps
+   - Configuration
+
+2. **Architecture Overview**
+   - System components
+   - Design patterns
+   - Data flow
+
+3. **Contributing Guidelines**
+   - Code style
+   - Testing requirements
+   - PR process
+{% endif %}
+
+{% if 'architecture' in doc_types %}
+#### Architecture Documentation
+1. **System Overview**
+   - High-level architecture diagram
+   - Component responsibilities
+   - Technology stack
+
+2. **Design Decisions**
+   - Architecture patterns
+   - Trade-offs
+   - Scalability considerations
+{% endif %}
+
+{% if 'changelog' in doc_types %}
+#### Changelog
+```markdown
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+## [1.0.0] - 2026-02-18
+
+### Added
+- Initial release
+- User authentication
+- API endpoints for CRUD operations
+
+### Changed
+- Updated database schema
+
+### Fixed
+- Fixed security vulnerability in login
+
+### Deprecated
+- Old API v1 endpoints (use v2)
+```
+{% endif %}
+
+### 3. Documentation Quality Checklist
+
+- [ ] Clear and concise language
+- [ ] Correct grammar and spelling
+- [ ] Code examples are tested and working
+- [ ] Links are valid
+- [ ] Screenshots/diagrams are up-to-date
+- [ ] Covers all major features
+- [ ] Includes troubleshooting section
+
+## Best Practices
+
+- **User-Centric**: Write for your audience
+- **Examples**: Show, don't just tell
+- **Up-to-Date**: Keep docs in sync with code
+- **Searchable**: Use clear headings and keywords
+- **Accessible**: Use alt text for images
+- **Maintainable**: Use templates and automation

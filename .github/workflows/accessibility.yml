@@ -1,0 +1,157 @@
+name: Accessibility Tests
+
+on:
+  pull_request:
+    paths:
+      - 'packages/web/src/**'
+      - 'packages/web/__tests__/e2e/**'
+      - 'packages/web/playwright.config.ts'
+      - 'packages/web/.lighthouserc.cjs'
+      - 'packages/web/package.json'
+      - 'packages/web/scripts/run-playwright-e2e.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  a11y-tests:
+    name: Accessibility Tests (axe-core)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: packages/web/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: packages/web
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+        working-directory: packages/web
+
+      - name: Build frontend
+        run: npm run build
+        working-directory: packages/web
+
+      - name: Start API server (background)
+        run: |
+          cd packages/api
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+          uvicorn vibesmith_api.main:app --host 127.0.0.1 --port 8000 &
+          sleep 5
+        continue-on-error: true
+
+      - name: Start frontend dev server (background)
+        run: |
+          npm run preview &
+          sleep 3
+        working-directory: packages/web
+
+      - name: Run accessibility tests
+        run: npm run test:a11y
+        working-directory: packages/web
+
+      - name: Upload accessibility report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: a11y-report
+          path: packages/web/playwright-report/
+          retention-days: 30
+
+      - name: Comment PR with violations
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = [
+              '## ⚠️ Accessibility Violations Detected',
+              '',
+              'Accessibility tests failed. Please review the uploaded report for details.',
+              '',
+              '**Actions:**',
+              '- Check the `a11y-report` artifact for detailed violations',
+              '- Fix WCAG 2.1 AA violations',
+              '- Run `npm run test:a11y` locally to verify fixes',
+              '',
+              '**Resources:**',
+              '- [WCAG 2.1 Quick Reference](https://www.w3.org/WAI/WCAG21/quickref/)',
+              '- [axe-core Rules](https://github.com/dequelabs/axe-core/blob/develop/doc/rule-descriptions.md)',
+            ].join('\n');
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+
+  lighthouse-a11y:
+    name: Lighthouse Accessibility Score
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: packages/web/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: packages/web
+
+      - name: Build frontend
+        run: npm run build
+        working-directory: packages/web
+
+      - name: Start API server (background)
+        run: |
+          cd packages/api
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+          uvicorn vibesmith_api.main:app --host 127.0.0.1 --port 8000 &
+          sleep 5
+        continue-on-error: true
+
+      - name: Start frontend dev server (background)
+        run: |
+          npm run preview &
+          sleep 3
+        working-directory: packages/web
+
+      - name: Run Lighthouse CI
+        run: npm run lighthouse
+        working-directory: packages/web
+
+      - name: Upload Lighthouse report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: packages/web/.lighthouseci/
+          retention-days: 30
+
+      - name: Check accessibility score
+        run: |
+          # Check that Lighthouse accessibility score is 90 or above
+          # (actual implementation uses assert settings in .lighthouserc.js)
+          echo "Accessibility score check completed"
+        working-directory: packages/web

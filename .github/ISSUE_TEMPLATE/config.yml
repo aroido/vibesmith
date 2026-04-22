@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Questions/Discussions
+    url: https://github.com/aroido/vibesmith/discussions
+    about: Use Discussions for technical questions or idea discussions
+  - name: 📚 Documentation
+    url: https://github.com/aroido/vibesmith/blob/main/docs/README.md
+    about: See the docs/ folder for project documentation

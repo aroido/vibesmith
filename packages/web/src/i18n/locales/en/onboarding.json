@@ -1,0 +1,28 @@
+{
+  "tour": {
+    "welcome": {
+      "title": "Welcome to VibeSmith!",
+      "description": "Manage Skills, Agents, Commands, Hooks, and Rules in one place. Take a 2-minute tour to explore the key features!"
+    },
+    "scan": {
+      "title": "Scan Your Project",
+      "description": "Click the Settings button to add your first project. VibeSmith will scan your project folder for AI agent components."
+    },
+    "components": {
+      "title": "Browse Components",
+      "description": "View all AI agent components in one place. Filter by type, project, and status."
+    },
+    "create": {
+      "title": "Create a New Skill",
+      "description": "Use the Wizard to create new Skills, Agents, and Commands with guided templates."
+    },
+    "projects": {
+      "title": "Open the Project Hub",
+      "description": "Use the Projects tab for list and sync actions, and check usage insights under Components > Analysis."
+    },
+    "graph": {
+      "title": "Explore the Dependency Graph",
+      "description": "Visually explore the relationships between components in the dependency graph. Identify circular dependencies and impact scope at a glance."
+    }
+  }
+}

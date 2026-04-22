@@ -1,0 +1,102 @@
+{
+  "entry": {
+    "title": "License & Billing",
+    "description": "Check your current license status and upgrade your plan.",
+    "manage": "Manage license",
+    "pricing": "View plans",
+    "comingSoonBadge": "Coming Soon",
+    "comingSoonDescription": "License and billing features are currently under preparation."
+  },
+  "pages": {
+    "license": {
+      "title": "License Management",
+      "subtitle": "Current plan status and license key management"
+    },
+    "pricing": {
+      "title": "Choose a plan",
+      "subtitle": "Compare Free / Pro / Team and start checkout"
+    },
+    "checkoutSuccess": {
+      "title": "Payment completed",
+      "subtitle": "Check your license activation status",
+      "description": "Your payment was processed successfully. You can verify your plan on the license page."
+    },
+    "checkoutCancel": {
+      "title": "Payment canceled",
+      "subtitle": "You can retry checkout anytime",
+      "description": "The checkout flow was canceled. You can restart from the pricing page."
+    }
+  },
+  "status": {
+    "title": "Current license status",
+    "validity": "Validity",
+    "valid": "Valid",
+    "invalid": "Invalid",
+    "plan": "Plan",
+    "expiresAt": "Expires at"
+  },
+  "form": {
+    "title": "Validate license key",
+    "keyLabel": "License key",
+    "keyPlaceholder": "VS-XXXX-XXXX-XXXX-XXXX",
+    "help": "Enter a valid license key to verify your current plan status on this device."
+  },
+  "pricing": {
+    "emailLabel": "Billing email",
+    "emailPlaceholder": "user@example.com"
+  },
+  "plans": {
+    "free": {
+      "name": "Free",
+      "price": "$0 / month",
+      "description": "Core features for basic usage",
+      "features": {
+        "f1": "Basic component management",
+        "f2": "Manual backup/restore",
+        "f3": "Community support"
+      }
+    },
+    "pro": {
+      "name": "Pro",
+      "price": "$19 / month",
+      "description": "Productivity plan for individual users",
+      "features": {
+        "f1": "Advanced analytics",
+        "f2": "Priority support",
+        "f3": "Fast update access"
+      }
+    },
+    "team": {
+      "name": "Team",
+      "price": "$49 / month",
+      "description": "Collaboration plan for teams",
+      "features": {
+        "f1": "Team workspaces",
+        "f2": "Collaboration features",
+        "f3": "Team-level management"
+      }
+    }
+  },
+  "actions": {
+    "validate": "Validate",
+    "validating": "Validating...",
+    "clearKey": "Clear key",
+    "goPricing": "View plans",
+    "goLicense": "Go to license",
+    "manageLicense": "Manage current plan",
+    "checkout": "Start {{plan}} checkout",
+    "checkoutPending": "Preparing checkout..."
+  },
+  "messages": {
+    "validated": "License validated ({{plan}})",
+    "cleared": "Stored license key has been removed",
+    "redirecting": "Redirecting to Stripe Checkout"
+  },
+  "errors": {
+    "keyRequired": "Please enter a license key",
+    "invalidKey": "Invalid license key",
+    "validateFailed": "Failed to validate license",
+    "emailRequired": "Please enter a billing email",
+    "checkoutFailed": "Failed to create checkout session"
+  }
+}

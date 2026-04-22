@@ -1,0 +1,64 @@
+{
+  "fields": [
+    {
+      "name": "skill_name",
+      "label": "스킬 이름",
+      "type": "text",
+      "required": true,
+      "placeholder": "예: api-test-generator",
+      "validation": {
+        "pattern": "^[a-z0-9-]+$",
+        "message": "소문자, 숫자, 하이픈만 사용 가능합니다",
+        "min_length": 3,
+        "max_length": 50
+      }
+    },
+    {
+      "name": "description",
+      "label": "설명",
+      "type": "textarea",
+      "required": true,
+      "placeholder": "API 테스트 자동화 스킬을 설명하세요",
+      "validation": {
+        "min_length": 10,
+        "max_length": 500
+      }
+    },
+    {
+      "name": "api_framework",
+      "label": "API 프레임워크",
+      "type": "select",
+      "required": true,
+      "options": ["fastapi", "express", "flask", "django", "nestjs"],
+      "default": "fastapi",
+      "help_text": "테스트할 API 프레임워크"
+    },
+    {
+      "name": "test_framework",
+      "label": "테스트 프레임워크",
+      "type": "select",
+      "required": true,
+      "options": ["pytest", "jest", "vitest", "mocha"],
+      "default": "pytest",
+      "help_text": "사용할 테스트 프레임워크"
+    },
+    {
+      "name": "test_types",
+      "label": "테스트 타입",
+      "type": "multiselect",
+      "required": false,
+      "options": ["unit", "integration", "e2e", "performance", "security"],
+      "default": ["unit", "integration"],
+      "help_text": "생성할 테스트 타입"
+    },
+    {
+      "name": "tools",
+      "label": "허용 도구",
+      "type": "multiselect",
+      "required": false,
+      "options": ["read", "write", "shell", "search"],
+      "default": ["read", "write", "shell"],
+      "help_text": "이 스킬이 사용할 수 있는 도구"
+    }
+  ]
+}

@@ -1,0 +1,180 @@
+# Agent: {{ agent_name }}
+
+## Description
+{{ description }}
+
+## Skills
+{% if skills %}
+{% for skill in skills %}
+- {{ skill }}
+{% endfor %}
+{% endif %}
+
+## Context
+- project_structure
+- existing_tests
+- coding_standards
+
+## Instructions
+
+### 1. Refactoring Strategy
+
+**Goals**: {{ refactoring_goals|join(', ') }}
+**Preserve Behavior**: {{ 'Yes' if preserve_behavior else 'No' }}
+**Run Tests After**: {{ 'Yes' if run_tests_after else 'No' }}
+
+### 2. Refactoring Workflow
+
+1. **Analyze Code**
+   - Identify code smells
+   - Measure complexity
+   - Find duplication
+   - Check for anti-patterns
+
+2. **Plan Refactoring**
+   - Prioritize improvements
+   - Identify safe transformations
+   - Plan incremental changes
+
+3. **Apply Refactorings**
+
+{% if 'reduce-complexity' in refactoring_goals %}
+#### Reduce Complexity
+- Extract methods for long functions
+- Simplify conditional logic
+- Reduce nesting levels
+- Break down large classes
+
+**Example**:
+```python
+# Before (Cyclomatic Complexity: 10)
+def process_user(user):
+    if user:
+        if user.is_active:
+            if user.has_permission:
+                if user.age > 18:
+                    return "allowed"
+    return "denied"
+
+# After (Cyclomatic Complexity: 2)
+def process_user(user):
+    if not _is_valid_user(user):
+        return "denied"
+    return "allowed"
+
+def _is_valid_user(user):
+    return (user and 
+            user.is_active and 
+            user.has_permission and 
+            user.age > 18)
+```
+{% endif %}
+
+{% if 'improve-readability' in refactoring_goals %}
+#### Improve Readability
+- Use descriptive names
+- Extract magic numbers to constants
+- Add meaningful comments
+- Improve formatting
+
+**Example**:
+```python
+# Before
+def calc(x, y):
+    return x * 24 * 60 * 60 + y
+
+# After
+SECONDS_PER_DAY = 24 * 60 * 60
+
+def calculate_total_seconds(days: int, additional_seconds: int) -> int:
+    """Calculate total seconds from days plus additional seconds."""
+    return days * SECONDS_PER_DAY + additional_seconds
+```
+{% endif %}
+
+{% if 'eliminate-duplication' in refactoring_goals %}
+#### Eliminate Duplication
+- Extract common code into functions
+- Use inheritance/composition
+- Apply DRY principle
+
+**Example**:
+```python
+# Before (Duplication)
+def send_email(user):
+    print(f"Sending to {user.email}")
+    # ... email logic ...
+
+def send_sms(user):
+    print(f"Sending to {user.phone}")
+    # ... sms logic ...
+
+# After (DRY)
+def send_notification(user, channel, address):
+    print(f"Sending to {address}")
+    # ... notification logic ...
+```
+{% endif %}
+
+{% if 'improve-performance' in refactoring_goals %}
+#### Improve Performance
+- Optimize algorithms
+- Reduce database queries
+- Add caching
+- Use lazy evaluation
+
+**Example**:
+```python
+# Before (O(n²))
+def find_duplicates(items):
+    duplicates = []
+    for i, item in enumerate(items):
+        for j, other in enumerate(items):
+            if i != j and item == other:
+                duplicates.append(item)
+    return duplicates
+
+# After (O(n))
+def find_duplicates(items):
+    seen = set()
+    duplicates = set()
+    for item in items:
+        if item in seen:
+            duplicates.add(item)
+        seen.add(item)
+    return list(duplicates)
+```
+{% endif %}
+
+{% if 'modernize-code' in refactoring_goals %}
+#### Modernize Code
+- Use modern language features
+- Update deprecated APIs
+- Apply best practices
+{% endif %}
+
+4. **Verify Changes**
+{% if run_tests_after %}
+   - Run test suite
+   - Check code coverage
+   - Verify performance
+{% endif %}
+   - Review diffs
+   - Validate behavior preservation
+
+### 3. Refactoring Checklist
+
+- [ ] Code is more maintainable
+- [ ] Complexity is reduced
+- [ ] Tests still pass
+- [ ] No behavior changes (unless intended)
+- [ ] Performance is equal or better
+- [ ] Code follows project standards
+
+## Best Practices
+
+- **Small Steps**: Refactor incrementally
+- **Tests First**: Ensure good test coverage
+- **One Thing**: One refactoring at a time
+- **Version Control**: Commit after each refactoring
+- **Code Review**: Get feedback on changes

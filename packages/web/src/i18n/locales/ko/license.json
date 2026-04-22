@@ -1,0 +1,102 @@
+{
+  "entry": {
+    "title": "라이선스 및 결제",
+    "description": "현재 라이선스 상태를 확인하고 플랜을 업그레이드할 수 있습니다.",
+    "manage": "라이선스 관리",
+    "pricing": "플랜 보기",
+    "comingSoonBadge": "Coming Soon",
+    "comingSoonDescription": "라이선스/결제 기능은 현재 출시 준비 중입니다."
+  },
+  "pages": {
+    "license": {
+      "title": "라이선스 관리",
+      "subtitle": "현재 플랜 상태 및 라이선스 키 관리"
+    },
+    "pricing": {
+      "title": "플랜 선택",
+      "subtitle": "Free / Pro / Team 플랜 비교 및 결제 시작"
+    },
+    "checkoutSuccess": {
+      "title": "결제가 완료되었습니다",
+      "subtitle": "라이선스 활성화 상태를 확인해주세요",
+      "description": "결제가 정상적으로 처리되었습니다. 라이선스 페이지에서 플랜 상태를 확인할 수 있습니다."
+    },
+    "checkoutCancel": {
+      "title": "결제가 취소되었습니다",
+      "subtitle": "언제든지 다시 결제를 시도할 수 있습니다",
+      "description": "결제 과정이 취소되었습니다. 플랜 페이지에서 다시 진행할 수 있습니다."
+    }
+  },
+  "status": {
+    "title": "현재 라이선스 상태",
+    "validity": "유효성",
+    "valid": "유효",
+    "invalid": "미유효",
+    "plan": "플랜",
+    "expiresAt": "만료일"
+  },
+  "form": {
+    "title": "라이선스 키 검증",
+    "keyLabel": "라이선스 키",
+    "keyPlaceholder": "VS-XXXX-XXXX-XXXX-XXXX",
+    "help": "유효한 라이선스 키를 입력하면 현재 기기에서 플랜 상태를 확인할 수 있습니다."
+  },
+  "pricing": {
+    "emailLabel": "결제 이메일",
+    "emailPlaceholder": "user@example.com"
+  },
+  "plans": {
+    "free": {
+      "name": "무료",
+      "price": "$0 / month",
+      "description": "기본 기능 중심 플랜",
+      "features": {
+        "f1": "기본 컴포넌트 관리",
+        "f2": "수동 백업/복원",
+        "f3": "커뮤니티 지원"
+      }
+    },
+    "pro": {
+      "name": "프로",
+      "price": "$19 / month",
+      "description": "개인 생산성 향상 플랜",
+      "features": {
+        "f1": "고급 분석 기능",
+        "f2": "우선 지원",
+        "f3": "빠른 업데이트 접근"
+      }
+    },
+    "team": {
+      "name": "팀",
+      "price": "$49 / month",
+      "description": "협업 중심 팀 플랜",
+      "features": {
+        "f1": "팀 워크스페이스",
+        "f2": "협업 기능",
+        "f3": "팀 단위 관리"
+      }
+    }
+  },
+  "actions": {
+    "validate": "검증",
+    "validating": "검증 중...",
+    "clearKey": "키 삭제",
+    "goPricing": "플랜 보기",
+    "goLicense": "라이선스 관리로 이동",
+    "manageLicense": "현재 플랜 관리",
+    "checkout": "{{plan}} 결제 시작",
+    "checkoutPending": "체크아웃 준비 중..."
+  },
+  "messages": {
+    "validated": "라이선스가 확인되었습니다 ({{plan}})",
+    "cleared": "저장된 라이선스 키를 제거했습니다",
+    "redirecting": "Stripe Checkout으로 이동합니다"
+  },
+  "errors": {
+    "keyRequired": "라이선스 키를 입력해주세요",
+    "invalidKey": "유효하지 않은 라이선스 키입니다",
+    "validateFailed": "라이선스 검증에 실패했습니다",
+    "emailRequired": "결제 이메일을 입력해주세요",
+    "checkoutFailed": "체크아웃 생성에 실패했습니다"
+  }
+}

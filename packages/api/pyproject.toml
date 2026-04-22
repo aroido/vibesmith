@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vibesmith-api"
+version = "0.1.0"
+description = "VibeSmith REST API Server"
+requires-python = ">=3.11"
+dependencies = [
+    "email-validator>=2.0",
+    "fastapi>=0.110",
+    "httpx>=0.27",
+    "uvicorn[standard]>=0.27",
+    "vibesmith-core",
+    "structlog>=24.0",
+    "jinja2>=3.1",
+    "slowapi>=0.1.9",
+    "stripe>=8.0",
+    "python-jose[cryptography]>=3.3.0",
+    "passlib[bcrypt]>=1.7.4",
+    "bcrypt<5",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "httpx>=0.27",
+    "ruff>=0.1",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"

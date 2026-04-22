@@ -1,0 +1,309 @@
+/**
+ * Omnibox Styles
+ * Issue #69: Cmd+K Command Palette
+ */
+
+/* Accessibility - Screen reader only */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Overlay */
+.omnibox-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 5rem;
+}
+
+.omnibox-backdrop {
+  position: absolute;
+  inset: 0;
+  background-color: color-mix(in srgb, var(--color-background) 20%, black 80%);
+  backdrop-filter: blur(4px);
+}
+
+/* Container */
+.omnibox-container {
+  position: relative;
+  width: 100%;
+  max-width: 42rem;
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  box-shadow: 0 25px 50px -12px color-mix(in srgb, var(--color-background), transparent 50%);
+  overflow: hidden;
+  animation: omnibox-slide-in 0.2s ease-out;
+}
+
+@keyframes omnibox-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-1rem) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Header */
+.omnibox-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.omnibox-search-icon {
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+
+.omnibox-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 1.125rem;
+  color: var(--color-text-primary);
+}
+
+.omnibox-input::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+.omnibox-kbd {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  background-color: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 0.25rem;
+  font-family: ui-monospace, monospace;
+}
+
+/* List */
+.omnibox-list {
+  max-height: 24rem;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+/* Group */
+.omnibox-group [cmdk-group-heading] {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Item */
+.omnibox-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  color: var(--color-text-primary);
+}
+
+.omnibox-item:hover,
+.omnibox-item[aria-selected="true"] {
+  background-color: var(--color-bg-hover);
+}
+
+.omnibox-item[aria-selected="true"] {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-primary) 12%, transparent),
+    color-mix(in srgb, var(--color-primary) 6%, transparent)
+  );
+  border-left: 2px solid var(--color-primary);
+  padding-left: calc(0.75rem - 2px);
+}
+
+.omnibox-item-icon {
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+}
+
+.omnibox-item[aria-selected="true"] .omnibox-item-icon {
+  color: var(--color-primary);
+}
+
+.omnibox-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.omnibox-item-label {
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.omnibox-item-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.omnibox-item-status {
+  font-size: 0.75rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-family: ui-monospace, monospace;
+}
+
+.omnibox-item-status.active {
+  background-color: color-mix(in srgb, var(--color-state-success) 20%, transparent);
+  color: var(--color-state-success);
+}
+
+.omnibox-item-status.inactive {
+  background-color: var(--color-bg-surface);
+  color: var(--color-text-tertiary);
+}
+
+.omnibox-item-description {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  margin-top: 0.25rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.omnibox-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--color-text-tertiary);
+}
+
+.omnibox-item-count {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  font-family: ui-monospace, monospace;
+}
+
+.omnibox-item-badge {
+  flex-shrink: 0;
+  color: var(--color-state-warning);
+}
+
+.omnibox-item-trailing {
+  flex-shrink: 0;
+  color: var(--color-text-tertiary);
+}
+
+/* Empty */
+.omnibox-empty {
+  padding: 2rem;
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}
+
+/* Footer */
+.omnibox-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 0.75rem;
+  border-top: 1px solid var(--color-border);
+  background-color: var(--color-bg-elevated);
+}
+
+.omnibox-footer-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+.omnibox-footer-hint kbd {
+  padding: 0.25rem 0.375rem;
+  background-color: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 0.25rem;
+  font-size: 0.625rem;
+}
+
+.omnibox-footer-separator {
+  color: var(--color-border);
+}
+
+/* Match Highlighting */
+.omnibox-item mark {
+  background-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
+  color: var(--color-primary);
+  font-weight: 600;
+  padding: 0 0.125rem;
+  border-radius: 0.125rem;
+}
+
+/* Scrollbar */
+.omnibox-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.omnibox-list::-webkit-scrollbar-track {
+  background: var(--color-bg-surface);
+}
+
+.omnibox-list::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+
+.omnibox-list::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-tertiary);
+}
+
+/* Dark mode optimizations */
+@media (prefers-color-scheme: dark) {
+  .omnibox-container {
+    background-color: color-mix(in srgb, var(--color-bg-elevated) 95%, transparent);
+    backdrop-filter: blur(16px);
+  }
+}
+
+/* Mobile responsive */
+@media (max-width: 640px) {
+  .omnibox-overlay {
+    padding-top: 2rem;
+  }
+  
+  .omnibox-container {
+    max-width: calc(100% - 2rem);
+  }
+  
+  .omnibox-list {
+    max-height: 20rem;
+  }
+}

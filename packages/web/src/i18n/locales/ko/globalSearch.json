@@ -1,0 +1,16 @@
+{
+  "placeholder": "구성요소 검색... (입력하여 필터)",
+  "ariaSearchLabel": "구성요소 검색",
+  "ariaRemoveLabel": "{{query}} 검색 기록 제거",
+  "recentSearches": "최근 검색",
+  "loading": "로딩 중...",
+  "noResultsFor": "\"{{query}}\"에 대한 검색 결과가 없습니다",
+  "typeToSearch": "구성요소를 검색하려면 입력하세요",
+  "ariaResultsLabel": "검색 결과",
+  "active": "활성",
+  "inactive": "비활성",
+  "updated": "{{date}}에 업데이트됨",
+  "navigate": "이동",
+  "select": "선택",
+  "close": "닫기"
+}

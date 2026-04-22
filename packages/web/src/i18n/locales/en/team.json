@@ -1,0 +1,73 @@
+{
+  "subtitle": "Create a collaboration workspace and manage team operation settings.",
+  "sections": {
+    "createTeam": "Create Team",
+    "inviteMember": "Invite Member",
+    "memberList": "Members",
+    "teamSettings": "Team Settings",
+    "teamLibrary": "Team Skill Library",
+    "activityFeed": "Recent Activity"
+  },
+  "labels": {
+    "activeTeam": "Active Team",
+    "teamName": "Team Name",
+    "teamDescription": "Team Description",
+    "currentTeamPrefix": "Current team:",
+    "inviteEmail": "Invite Email",
+    "inviteRole": "Invite Role",
+    "role": "Role",
+    "visibility": "Visibility",
+    "defaultPermission": "Default Permission",
+    "syncInterval": "Auto-sync Interval",
+    "autoSync": "Enable auto sync",
+    "owner": "Owner",
+    "downloads": "Downloads"
+  },
+  "placeholders": {
+    "teamName": "e.g. VibeSmith Team",
+    "teamDescription": "Describe your team mission and scope.",
+    "inviteEmail": "member@example.com"
+  },
+  "actions": {
+    "createTeam": "Create Team",
+    "inviteMember": "Send Invite",
+    "saveSettings": "Save Settings"
+  },
+  "roles": {
+    "owner": "Owner",
+    "maintainer": "Maintainer",
+    "member": "Member"
+  },
+  "visibility": {
+    "private": "Private",
+    "team": "Team Only",
+    "public": "Public"
+  },
+  "permissions": {
+    "read": "Read",
+    "write": "Read/Write"
+  },
+  "activityActions": {
+    "created": "created",
+    "updated": "updated",
+    "invited": "invited"
+  },
+  "messages": {
+    "teamCreated": "Created {{name}}.",
+    "memberInvited": "Invited {{email}} to this team.",
+    "settingsSaved": "Team settings saved."
+  },
+  "validation": {
+    "teamNameMin": "Team name must be at least 2 characters.",
+    "teamNameMax": "Team name must be 40 characters or fewer.",
+    "teamDescriptionMax": "Team description must be 160 characters or fewer.",
+    "inviteEmailInvalid": "Enter a valid email address.",
+    "syncIntervalInvalid": "Choose an allowed sync interval (5/30/60 minutes)."
+  },
+  "empty": {
+    "noActiveTeam": "No active team. Create a team first.",
+    "noMembers": "No members yet.",
+    "noSharedSkills": "No shared skills yet.",
+    "noActivities": "No recent activity yet."
+  }
+}

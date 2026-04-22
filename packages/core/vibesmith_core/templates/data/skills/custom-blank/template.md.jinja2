@@ -1,0 +1,43 @@
+# Skill: {{ skill_name }}
+
+## Description
+{{ description }}
+
+## Tools
+{% if tools %}
+{% for tool in tools %}
+- {{ tool }}
+{% endfor %}
+{% else %}
+- read
+- write
+{% endif %}
+
+## Context
+{% if context %}
+{% for ctx in context %}
+- {{ ctx }}
+{% endfor %}
+{% else %}
+- project_structure
+{% endif %}
+
+## Instructions
+
+1. **Step 1**: Describe your first step here
+2. **Step 2**: Describe your second step here
+3. **Step 3**: Describe your third step here
+
+Add specific instructions for your skill.
+
+## Examples
+
+```
+Add example code or usage patterns here
+```
+
+## Best Practices
+
+- Add best practices specific to your skill
+- Include common patterns and anti-patterns
+- Reference relevant documentation

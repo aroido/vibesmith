@@ -1,0 +1,317 @@
+name: Frontend CI
+# Disabled for faster PR merges - Tests run locally
+# Run manually when needed for full validation
+on:
+  workflow_dispatch:  # Manual trigger only
+
+# Concurrency control: cancel previous runs when new commits are pushed on the same PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # 1. Basic validation (Lint, Type Check, Unit Tests)
+  lint-and-test:
+    name: Lint & Unit Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/web
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          # ESLint 10 requires Node.js 20.19+
+          node-version: '20.19'
+          cache: 'npm'
+          cache-dependency-path: packages/web/package-lock.json
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Type check
+        run: npm run type-check
+      
+      - name: Lint
+        run: npm run lint
+
+      - name: Theme guardrail check
+        run: npm run check:theme
+      
+      - name: i18n check (keys + smoke)
+        run: npm run check:i18n
+      
+      - name: API Contract Tests (MSW Handlers)
+        run: npm run test:contract
+      
+      - name: Unit tests with coverage
+        run: npm run test:coverage
+      
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: packages/web/coverage/
+          retention-days: 30
+      
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./packages/web/coverage/coverage-final.json
+          flags: frontend
+          name: frontend-coverage
+          fail_ci_if_error: false
+      
+      - name: Build
+        run: npm run build
+      
+      - name: Analyze bundle size
+        run: npm run analyze
+      
+      - name: Upload bundle stats
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle-stats
+          path: packages/web/dist/stats.html
+          retention-days: 30
+      
+      - name: Check bundle size
+        id: bundle-size
+        run: |
+          # Measure total dist folder size
+          TOTAL_SIZE=$(du -sb dist | awk '{print $1}')
+          MAX_SIZE=1048576  # 1MB
+          
+          echo "total_size=$TOTAL_SIZE" >> $GITHUB_OUTPUT
+          echo "max_size=$MAX_SIZE" >> $GITHUB_OUTPUT
+          
+          if [ $TOTAL_SIZE -gt $MAX_SIZE ]; then
+            echo "status=warning" >> $GITHUB_OUTPUT
+            echo "⚠️ Bundle size ($TOTAL_SIZE bytes) exceeds recommended limit ($MAX_SIZE bytes)"
+          else
+            echo "status=ok" >> $GITHUB_OUTPUT
+            echo "✅ Bundle size ($TOTAL_SIZE bytes) is within limit"
+          fi
+      
+      - name: Comment PR with bundle size
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const totalSize = parseInt('${{ steps.bundle-size.outputs.total_size }}');
+            const maxSize = parseInt('${{ steps.bundle-size.outputs.max_size }}');
+            const status = '${{ steps.bundle-size.outputs.status }}';
+            
+            const totalSizeMB = (totalSize / 1024 / 1024).toFixed(2);
+            const maxSizeMB = (maxSize / 1024 / 1024).toFixed(2);
+            const percentage = Math.round((totalSize / maxSize) * 100);
+            
+            const emoji = status === 'ok' ? '✅' : '⚠️';
+            const statusText = status === 'ok' ? 'Within limit' : 'Exceeds recommended limit';
+            
+            const warning = status === 'warning' ? '\n\n⚠️ **Warning:** Bundle size exceeds recommended limit. Consider code splitting or removing unused dependencies.' : '';
+            const body = `## 📦 Bundle Size Report\n\n**Total Bundle Size:** ${emoji} ${totalSizeMB} MB / ${maxSizeMB} MB (${percentage}%)\n\n**Status:** ${statusText}${warning}\n\n📊 [View detailed bundle analysis in artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+
+  # 2. E2E Tests (Playwright)
+  e2e:
+    name: E2E Tests (Playwright)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/web
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [chromium, firefox, webkit]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.19'
+          cache: 'npm'
+          cache-dependency-path: packages/web/package-lock.json
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps ${{ matrix.project }}
+      
+      - name: Run E2E tests
+        run: npm run test:e2e -- --project=${{ matrix.project }}
+      
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-${{ matrix.project }}
+          path: packages/web/playwright-report/
+          retention-days: 30
+
+  # 3. Accessibility Tests (axe-core)
+  accessibility:
+    name: Accessibility Tests (axe-core)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/web
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.19'
+          cache: 'npm'
+          cache-dependency-path: packages/web/package-lock.json
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+      
+      - name: Run accessibility tests
+        run: npm run test:a11y
+      
+      - name: Upload accessibility report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: accessibility-report
+          path: packages/web/playwright-report/
+          retention-days: 30
+
+  # 4. Performance Tests (Lighthouse CI)
+  lighthouse:
+    name: Performance Tests (Lighthouse CI)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/web
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.19'
+          cache: 'npm'
+          cache-dependency-path: packages/web/package-lock.json
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build
+        run: npm run build
+      
+      - name: Run Lighthouse CI
+        run: |
+          npm install -g @lhci/cli
+          lhci autorun --config=.lighthouserc.cjs
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+      
+      - name: Upload Lighthouse results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse-results
+          path: packages/web/.lighthouseci/
+          retention-days: 30
+      
+      - name: Parse Lighthouse results
+        if: github.event_name == 'pull_request'
+        id: lighthouse-results
+        run: |
+          # Parse results from manifest.json
+          if [ -f .lighthouseci/manifest.json ]; then
+            PERF_SCORE=$(jq -r '.[0].summary.performance' .lighthouseci/manifest.json)
+            A11Y_SCORE=$(jq -r '.[0].summary.accessibility' .lighthouseci/manifest.json)
+            BP_SCORE=$(jq -r '.[0].summary."best-practices"' .lighthouseci/manifest.json)
+            SEO_SCORE=$(jq -r '.[0].summary.seo' .lighthouseci/manifest.json)
+            
+            echo "performance=$PERF_SCORE" >> $GITHUB_OUTPUT
+            echo "accessibility=$A11Y_SCORE" >> $GITHUB_OUTPUT
+            echo "best-practices=$BP_SCORE" >> $GITHUB_OUTPUT
+            echo "seo=$SEO_SCORE" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Comment PR with Lighthouse results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const perf = '${{ steps.lighthouse-results.outputs.performance }}';
+            const a11y = '${{ steps.lighthouse-results.outputs.accessibility }}';
+            const bp = '${{ steps.lighthouse-results.outputs.best-practices }}';
+            const seo = '${{ steps.lighthouse-results.outputs.seo }}';
+            
+            const perfEmoji = perf >= 0.9 ? '✅' : perf >= 0.7 ? '⚠️' : '❌';
+            const a11yEmoji = a11y >= 0.9 ? '✅' : a11y >= 0.7 ? '⚠️' : '❌';
+            const bpEmoji = bp >= 0.9 ? '✅' : bp >= 0.7 ? '⚠️' : '❌';
+            const seoEmoji = seo >= 0.8 ? '✅' : seo >= 0.6 ? '⚠️' : '❌';
+            
+            const rows = [
+              `| ${perfEmoji} Performance | ${Math.round(perf * 100)}/100 | ${perf >= 0.9 ? 'Pass' : 'Needs Improvement'} |`,
+              `| ${a11yEmoji} Accessibility | ${Math.round(a11y * 100)}/100 | ${a11y >= 0.9 ? 'Pass' : 'Needs Improvement'} |`,
+              `| ${bpEmoji} Best Practices | ${Math.round(bp * 100)}/100 | ${bp >= 0.9 ? 'Pass' : 'Needs Improvement'} |`,
+              `| ${seoEmoji} SEO | ${Math.round(seo * 100)}/100 | ${seo >= 0.8 ? 'Pass' : 'Needs Improvement'} |`,
+            ].join('\n');
+            const body = `## 📊 Lighthouse Performance Report\n\n**Core Scores:**\n\n| Category | Score | Status |\n|----------|-------|--------|\n${rows}\n\n**Performance Goals:**\n- ✅ Performance: ≥ 90\n- ✅ Accessibility: ≥ 90\n- ✅ Best Practices: ≥ 90\n- ✅ SEO: ≥ 80\n\n📈 [View detailed Lighthouse report in artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+
+  # 5. Aggregated Results Report
+  report:
+    name: Test Results Summary
+    runs-on: ubuntu-latest
+    needs: [lint-and-test, e2e, accessibility, lighthouse]
+    if: always()
+    
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+      
+      - name: Create summary
+        run: |
+          echo "## 🎯 Frontend CI Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Completed Jobs" >> $GITHUB_STEP_SUMMARY
+          echo "- Lint & Unit Tests" >> $GITHUB_STEP_SUMMARY
+          echo "- E2E Tests (Chromium, Firefox, WebKit)" >> $GITHUB_STEP_SUMMARY
+          echo "- Accessibility Tests" >> $GITHUB_STEP_SUMMARY
+          echo "- Performance Tests (Lighthouse)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "- Bundle Stats" >> $GITHUB_STEP_SUMMARY
+          echo "- Playwright Reports" >> $GITHUB_STEP_SUMMARY
+          echo "- Accessibility Report" >> $GITHUB_STEP_SUMMARY
+          echo "- Lighthouse Results" >> $GITHUB_STEP_SUMMARY

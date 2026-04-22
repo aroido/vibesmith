@@ -1,0 +1,119 @@
+# Skill: {{ skill_name }}
+
+## Description
+{{ description }}
+
+## Tools
+{% if tools %}
+{% for tool in tools %}
+- {{ tool }}
+{% endfor %}
+{% else %}
+- read
+- write
+- shell
+{% endif %}
+
+## Context
+- project_structure
+- dependencies
+
+## Instructions
+
+1. **Analyze API Endpoints**
+   - Review API routes and endpoints
+   - Understand request/response schemas
+   - Identify authentication requirements
+
+2. **Generate Test Cases**
+   - Framework: {{ test_framework }}
+   - API Framework: {{ api_framework }}
+{% if test_types %}
+   - Test Types: {{ test_types|join(', ') }}
+{% endif %}
+
+3. **Test Coverage**
+   - Happy path scenarios
+   - Error handling and edge cases
+   - Input validation
+   - Authentication and authorization
+   - Performance testing (if needed)
+
+## Test Patterns
+
+{% if test_framework == 'pytest' %}
+```python
+import pytest
+from fastapi.testclient import TestClient
+from app.main import app
+
+client = TestClient(app)
+
+def test_get_items_success():
+    """Test GET /items returns 200 and valid data."""
+    response = client.get("/api/items")
+    assert response.status_code == 200
+    data = response.json()
+    assert "items" in data
+    assert isinstance(data["items"], list)
+
+def test_create_item_success():
+    """Test POST /items creates item successfully."""
+    payload = {"name": "Test Item", "description": "Test"}
+    response = client.post("/api/items", json=payload)
+    assert response.status_code == 201
+    data = response.json()
+    assert data["name"] == "Test Item"
+
+def test_create_item_validation_error():
+    """Test POST /items with invalid data returns 422."""
+    payload = {"name": ""}  # Empty name
+    response = client.post("/api/items", json=payload)
+    assert response.status_code == 422
+
+@pytest.mark.parametrize("item_id,expected_status", [
+    ("valid-uuid", 200),
+    ("invalid-uuid", 404),
+])
+def test_get_item_by_id(item_id, expected_status):
+    """Test GET /items/{id} with various inputs."""
+    response = client.get(f"/api/items/{item_id}")
+    assert response.status_code == expected_status
+```
+{% elif test_framework in ['jest', 'vitest'] %}
+```typescript
+import { describe, it, expect, beforeEach } from '{{ test_framework }}';
+import request from 'supertest';
+import app from '../app';
+
+describe('API Tests', () => {
+  beforeEach(() => {
+    // Setup
+  });
+
+  it('GET /api/items returns 200', async () => {
+    const response = await request(app).get('/api/items');
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('items');
+  });
+
+  it('POST /api/items creates item', async () => {
+    const payload = { name: 'Test Item' };
+    const response = await request(app)
+      .post('/api/items')
+      .send(payload);
+    expect(response.status).toBe(201);
+    expect(response.body.name).toBe('Test Item');
+  });
+});
+```
+{% endif %}
+
+## Best Practices
+
+- **Isolation**: Each test should be independent
+- **Fixtures**: Use fixtures or setup/teardown for test data
+- **Mocking**: Mock external dependencies
+- **Assertions**: Use specific, meaningful assertions
+- **Coverage**: Aim for 80%+ code coverage
+- **Performance**: Keep tests fast (<5s per test suite)

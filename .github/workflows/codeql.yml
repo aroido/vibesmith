@@ -1,0 +1,52 @@
+name: "CodeQL Security Scan"
+
+on:
+  push:
+    branches: [ main ]
+  schedule:
+    # Every Monday at 9 AM (KST)
+    - cron: '0 0 * * 1'
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    # Skip Dependabot PRs due to limited permissions
+    if: github.actor != 'dependabot[bot]'
+    permissions:
+      # Upload CodeQL analysis results
+      security-events: write
+      # Checkout repository
+      contents: read
+      # Comment on PRs
+      pull-requests: write
+      # Read workflow run info (required for codeql-action)
+      actions: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: javascript-typescript
+            build-mode: none
+          - language: python
+            build-mode: none
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+          # Query suite: security-extended (security-focused)
+          queries: security-extended
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
+        continue-on-error: true  # Prevent CI blocking on repos with Code Scanning disabled

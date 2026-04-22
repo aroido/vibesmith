@@ -1,0 +1,22 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Pre-commit Hook - Quality Gate 강제 실행
+
+echo "🔍 Pre-commit Quality Gate..."
+echo ""
+
+# Quality Gate 실행
+if ! ./scripts/quality-gate.sh; then
+    echo ""
+    echo "❌ Quality Gate 실패 - 커밋 불가!"
+    echo ""
+    echo "다음 중 하나를 선택하세요:"
+    echo "  1. 에러를 수정한 후 다시 커밋"
+    echo "  2. --no-verify 옵션으로 강제 커밋 (⚠️ 위험!)"
+    echo ""
+    exit 1
+fi
+
+echo "✅ Quality Gate 통과 - 커밋 진행..."
+echo ""

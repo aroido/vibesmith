@@ -1,0 +1,53 @@
+name: Theme Guardrail Check
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'packages/web/src/**'
+      - 'packages/web/scripts/theme-style-metrics.mjs'
+      - 'packages/web/package.json'
+      - '.github/workflows/theme-check.yml'
+  pull_request:
+    paths:
+      - 'packages/web/src/**'
+      - 'packages/web/scripts/theme-style-metrics.mjs'
+      - 'packages/web/package.json'
+      - '.github/workflows/theme-check.yml'
+
+jobs:
+  theme-check:
+    name: Theme Check (No Hardcoded Colors)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/web
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.19'
+          cache: 'npm'
+          cache-dependency-path: packages/web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Enforce theme guardrails
+        run: npm run check:theme
+
+      - name: Generate metrics report
+        if: always()
+        run: npm run -s metrics:theme > theme-metrics.txt
+
+      - name: Upload theme metrics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: theme-metrics
+          path: packages/web/theme-metrics.txt
+          retention-days: 14

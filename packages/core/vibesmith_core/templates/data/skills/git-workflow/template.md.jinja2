@@ -1,0 +1,79 @@
+# Skill: {{ skill_name }}
+
+## Description
+{{ description }}
+
+## Tools
+{% for tool in tools|default(['read', 'shell']) %}
+- {{ tool }}
+{% endfor %}
+
+## Context
+- git_history
+- project_structure
+
+## Instructions
+
+1. **Analyze Git Context**
+   - Review recent commits
+   - Check current branch
+   - Identify staged changes
+
+2. **Generate {{ workflow_type|title }}**
+{% if convention %}
+   - Follow: {{ convention }}
+{% endif %}
+
+3. **Git Workflow Standards**
+{% if workflow_type == 'commit-message' %}
+   - Use imperative mood ("Add feature" not "Added feature")
+   - Keep first line under 72 characters
+   - Add detailed description in body if needed
+   - Reference issue numbers
+{% elif workflow_type == 'branch-naming' %}
+   - Format: `type/issue-number-description`
+   - Types: feature, bugfix, hotfix, refactor
+   - Use lowercase and hyphens
+{% elif workflow_type == 'pr-description' %}
+   - Summarize changes clearly
+   - Add context and motivation
+   - List breaking changes
+   - Include testing instructions
+{% endif %}
+
+{% if convention == 'conventional-commits' %}
+## Conventional Commits Format
+
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+**Types**:
+- feat: New feature
+- fix: Bug fix
+- docs: Documentation
+- style: Formatting
+- refactor: Code restructuring
+- test: Tests
+- chore: Maintenance
+
+**Example**:
+```
+feat(auth): add JWT authentication
+
+Implement JWT-based authentication system with refresh tokens.
+
+Closes #123
+```
+{% endif %}
+
+## Best Practices
+
+- Clear and concise messages
+- Reference related issues
+- Explain "why" not just "what"
+- Follow team conventions

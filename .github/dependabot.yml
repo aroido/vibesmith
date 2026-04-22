@@ -1,0 +1,99 @@
+version: 2
+updates:
+  # Frontend dependencies (npm)
+  - package-ecosystem: "npm"
+    directory: "/packages/web"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "00:00"
+      timezone: "Asia/Seoul"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "frontend"
+    # Allow security updates immediately
+    allow:
+      - dependency-type: "direct"
+      - dependency-type: "indirect"
+    # Version update strategy
+    versioning-strategy: increase
+    # Commit message configuration
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    # Grouping configuration
+    groups:
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
+      react-ecosystem:
+        patterns:
+          - "react-*"
+          - "@tanstack/react-*"
+      testing:
+        patterns:
+          - "@testing-library/*"
+          - "vitest"
+          - "@vitest/*"
+          - "@playwright/test"
+          - "playwright"
+          - "jest-*"
+          - "msw"
+      build-tools:
+        patterns:
+          - "vite"
+          - "@vitejs/*"
+          - "typescript"
+          - "eslint"
+          - "eslint-*"
+          - "@typescript-eslint/*"
+          - "prettier"
+      ui-libraries:
+        patterns:
+          - "@radix-ui/*"
+          - "lucide-react"
+          - "tailwindcss"
+          - "@tailwindcss/*"
+          - "sonner"
+      i18n:
+        patterns:
+          - "i18next"
+          - "i18next-*"
+          - "react-i18next"
+
+  # Backend dependencies (pip)
+  - package-ecosystem: "pip"
+    directory: "/packages/api"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "00:00"
+      timezone: "Asia/Seoul"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "backend"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    groups:
+      fastapi:
+        patterns:
+          - "fastapi"
+          - "uvicorn"
+          - "pydantic"
+          - "pydantic-*"
+      testing:
+        patterns:
+          - "pytest"
+          - "pytest-*"
+          - "httpx"
+      linting:
+        patterns:
+          - "ruff"
+          - "black"
+          - "mypy"

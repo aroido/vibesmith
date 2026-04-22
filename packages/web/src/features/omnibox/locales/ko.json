@@ -1,0 +1,36 @@
+{
+  "placeholder": "검색하거나 명령 실행... (Cmd+K)",
+  "loading": "검색 중...",
+  "noResults": "검색 결과가 없습니다",
+  "components": "개 구성요소",
+  
+  "ariaLabel": "전역 명령 메뉴",
+  "ariaInputLabel": "검색 또는 명령 입력",
+  "ariaLoading": "검색 중입니다",
+  "ariaResultsFound": "{{count}}개의 결과를 찾았습니다",
+  "ariaNoResults": "검색 결과가 없습니다",
+  "ariaNoQuery": "구성요소, 프로젝트 또는 명령을 검색하세요",
+  
+  "groups": {
+    "quickActions": "빠른 액션",
+    "components": "구성요소",
+    "projects": "프로젝트"
+  },
+  
+  "actions": {
+    "goHome": "홈으로 이동",
+    "viewProjects": "프로젝트 보기",
+    "viewComponents": "전체 구성요소 보기",
+    "createComponent": "구성요소 생성",
+    "viewDependencies": "종속성 그래프 보기",
+    "viewTrash": "휴지통 보기",
+    "openSettings": "설정 열기",
+    "toggleTheme": "{{theme}} 모드로 전환",
+    "toggleLanguage": "{{lang}}로 전환"
+  },
+  
+  "theme": {
+    "light": "라이트",
+    "dark": "다크"
+  }
+}

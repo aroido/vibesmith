@@ -1,0 +1,36 @@
+{
+  "placeholder": "Search or run command... (Cmd+K)",
+  "loading": "Searching...",
+  "noResults": "No results found",
+  "components": "components",
+  
+  "ariaLabel": "Global command menu",
+  "ariaInputLabel": "Search or enter command",
+  "ariaLoading": "Searching",
+  "ariaResultsFound": "Found {{count}} results",
+  "ariaNoResults": "No results found",
+  "ariaNoQuery": "Search for components, projects, or commands",
+  
+  "groups": {
+    "quickActions": "Quick Actions",
+    "components": "Components",
+    "projects": "Projects"
+  },
+  
+  "actions": {
+    "goHome": "Go to Home",
+    "viewProjects": "View Projects",
+    "viewComponents": "View All Components",
+    "createComponent": "Create Component",
+    "viewDependencies": "View Dependency Graph",
+    "viewTrash": "View Trash",
+    "openSettings": "Open Settings",
+    "toggleTheme": "Switch to {{theme}} Mode",
+    "toggleLanguage": "Switch to {{lang}}"
+  },
+  
+  "theme": {
+    "light": "Light",
+    "dark": "Dark"
+  }
+}

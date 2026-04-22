@@ -1,0 +1,31 @@
+{
+  "name": "VibeSmith",
+  "short_name": "VibeSmith",
+  "description": "AI 코딩 에이전트(Claude Code, Cursor)의 Skills, Subagents, Commands, Hooks를 통합 관리하는 로컬 웹 GUI 도구",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-1024.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff",
+  "categories": ["development", "productivity", "utilities"],
+  "screenshots": []
+}

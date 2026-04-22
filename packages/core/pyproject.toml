@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vibesmith-core"
+version = "0.1.0"
+description = "VibeSmith Core Engine - AI agent configuration management"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.0",
+    "pyyaml>=6.0",
+    "networkx>=3.0",
+    "watchdog>=4.0",
+    "structlog>=24.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "ruff>=0.1",
+]
+
+[tool.setuptools.package-data]
+vibesmith_core = [
+    "templates/data/**/*.json",
+    "templates/data/**/*.md",
+    "templates/data/**/*.jinja2",
+    "templates/data/**/*.md.jinja2",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"

@@ -1,0 +1,55 @@
+{
+  "buttonText": "Feedback",
+  "buttonAria": "Send feedback",
+  "dialog": {
+    "title": "Send Feedback",
+    "description": "Report bugs, feature requests, or questions. We will create a GitHub issue automatically."
+  },
+  "fields": {
+    "category": "Category",
+    "title": "Title",
+    "titlePlaceholder": "Write the core issue in one line",
+    "description": "Description",
+    "descriptionPlaceholder": "Describe reproduction steps, expected behavior, and actual behavior",
+    "email": "Email (optional)",
+    "emailPlaceholder": "Provide it if follow-up is needed",
+    "screenshotUrl": "Screenshot URL (optional)",
+    "screenshotPlaceholder": "https://..."
+  },
+  "category": {
+    "bug": "Bug",
+    "feature": "Feature",
+    "question": "Question"
+  },
+  "templates": {
+    "apply": "Apply template",
+    "bug": "Reproduction steps:\n1.\n2.\n\nExpected behavior:\n\nActual behavior:\n",
+    "feature": "Problem/background:\n\nRequested improvement:\n\nExpected impact:\n",
+    "question": "Question:\n\nWhat I already tried:\n\nAdditional context:\n"
+  },
+  "systemInfo": {
+    "title": "Auto-collected system info",
+    "loading": "Collecting system information...",
+    "empty": "No system information collected."
+  },
+  "actions": {
+    "cancel": "Cancel",
+    "submit": "Submit feedback",
+    "submitting": "Submitting...",
+    "submitAnother": "Submit another",
+    "close": "Close"
+  },
+  "success": {
+    "title": "Feedback submitted",
+    "description": "GitHub issue #{{number}} has been created.",
+    "openIssue": "Open created issue",
+    "toast": "Feedback submitted (#{{number}})"
+  },
+  "errors": {
+    "titleRequired": "Please enter a title",
+    "descriptionRequired": "Please enter a description",
+    "submitFailed": "Failed to submit feedback",
+    "tokenNotConfigured": "Automatic issue creation is unavailable in this build. Open a prefilled issue in GitHub instead.",
+    "openInBrowser": "Open prefilled issue in browser"
+  }
+}

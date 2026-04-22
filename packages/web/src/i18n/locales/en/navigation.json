@@ -1,0 +1,20 @@
+{
+  "primary": {
+    "home": "Home",
+    "projects": "Projects",
+    "components": "Components",
+    "settings": "Settings"
+  },
+  "secondary": {
+    "usage": "Usage Analytics",
+    "team": "Team",
+    "backup": "Backups",
+    "trash": "Trash",
+    "dependencyGraph": "Dependency Graph"
+  },
+  "legacy": {
+    "dashboard": "Dashboard",
+    "dependencies": "Dependency Graph"
+  },
+  "mainMenu": "Main menu"
+}

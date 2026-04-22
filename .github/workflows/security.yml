@@ -1,0 +1,137 @@
+name: Dependency Checks (PR)
+
+on:
+  pull_request:
+    paths:
+      - 'packages/web/package.json'
+      - 'packages/web/package-lock.json'
+      - 'packages/api/pyproject.toml'
+      - 'packages/core/pyproject.toml'
+      - '.github/workflows/security.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  npm-audit:
+    name: NPM Security Audit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/web
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: packages/web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install audit-ci
+        run: npm install -g audit-ci
+
+      - name: Run audit-ci
+        id: audit
+        run: audit-ci --config ../../.audit-ci.json --skip-dev
+        continue-on-error: true
+
+      - name: Generate audit report
+        if: steps.audit.outcome == 'failure'
+        run: |
+          npm audit --omit=dev --json > audit-report.json
+          npm audit --omit=dev > audit-report.txt
+
+      - name: Upload audit report
+        if: steps.audit.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-report
+          path: packages/web/audit-report.*
+          retention-days: 30
+
+      - name: Comment PR with vulnerabilities
+        if: steps.audit.outcome == 'failure' && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('packages/web/audit-report.txt', 'utf8');
+            
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '## 🚨 Security Vulnerabilities Detected\n\n```\n' + report + '\n```\n\nPlease review and fix the vulnerabilities before merging.\n\n**Actions:**\n- Run `npm audit fix` to automatically fix vulnerabilities\n- Review the audit report artifact for details\n- Update dependencies manually if needed'
+            });
+
+      - name: Fail if vulnerabilities found
+        if: steps.audit.outcome == 'failure'
+        run: exit 1
+
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check dependency graph availability
+        id: dependency-graph
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data } = await github.rest.repos.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+            const status = data.security_and_analysis?.dependency_graph?.status || 'unavailable';
+            core.setOutput('enabled', status === 'enabled' ? 'true' : 'false');
+            core.notice(`Dependency graph status: ${status}`);
+
+      - name: Dependency Review
+        if: steps.dependency-graph.outputs.enabled == 'true'
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: moderate
+          deny-licenses: GPL-3.0, AGPL-3.0, LGPL-3.0
+          comment-summary-in-pr: always
+
+      - name: Skip dependency review when unsupported
+        if: steps.dependency-graph.outputs.enabled != 'true'
+        run: echo "Dependency graph is not enabled for this repository. Skipping dependency review."
+
+  license-check:
+    name: License Compliance Check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/web
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: packages/web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check licenses
+        run: |
+          npx license-checker --production --excludePrivatePackages --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;0BSD;CC0-1.0;Unlicense' --summary

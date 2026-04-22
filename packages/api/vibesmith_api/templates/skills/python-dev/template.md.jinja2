@@ -1,0 +1,19 @@
+---
+name: {{ name }}
+description: {{ description }}
+allowed-tools: {{ (config.get('tools') or ['read', 'write']) | join(', ') }}
+---
+
+# {{ name }}
+
+{{ description }}
+
+## 사용 방법
+
+이 스킬은 Python 개발 시 AI 에이전트가 참조합니다.
+
+## 허용 도구
+
+{% for tool in (config.get('tools') or ['read', 'write']) %}
+- {{ tool }}
+{% endfor %}

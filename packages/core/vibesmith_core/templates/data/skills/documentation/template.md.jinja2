@@ -1,0 +1,89 @@
+# Skill: {{ skill_name }}
+
+## Description
+{{ description }}
+
+## Tools
+{% for tool in tools|default(['read', 'write']) %}
+- {{ tool }}
+{% endfor %}
+
+## Context
+- project_structure
+- git_history
+
+## Instructions
+
+1. **Analyze Code**
+   - Review function/class definitions
+   - Understand parameters and return values
+   - Check for existing documentation
+
+2. **Generate Documentation**
+   - Format: {{ doc_format }}
+{% if include_examples %}
+   - Include code examples
+{% endif %}
+   - Add clear descriptions
+   - Document edge cases and errors
+
+3. **Documentation Standards**
+   - Be concise but complete
+   - Use consistent terminology
+   - Include type information
+   - Add usage examples
+   - Document exceptions/errors
+
+{% if doc_format == 'markdown' %}
+## Markdown Documentation Pattern
+
+```markdown
+# Function Name
+
+## Description
+Clear, concise description of what this function does.
+
+## Parameters
+- `param1` (type): Description
+- `param2` (type, optional): Description
+
+## Returns
+- `type`: Description of return value
+
+## Examples
+```python
+result = function_name(param1, param2)
+```
+
+## Errors
+- `ValueError`: When input is invalid
+```
+{% elif doc_format == 'docstring' %}
+## Python Docstring Pattern
+
+```python
+def function_name(param1: str, param2: int = 0) -> dict:
+    """Short description of the function.
+    
+    Longer description providing more context about what
+    the function does and how it should be used.
+    
+    Args:
+        param1: Description of first parameter
+        param2: Description of second parameter (default: 0)
+        
+    Returns:
+        Dictionary containing result data
+        
+    Raises:
+        ValueError: When param1 is empty
+        TypeError: When param2 is not an integer
+        
+    Examples:
+        >>> result = function_name("test", 5)
+        >>> print(result)
+        {'status': 'success', 'value': 5}
+    """
+    pass
+```
+{% endif %}

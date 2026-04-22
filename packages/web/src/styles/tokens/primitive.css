@@ -1,0 +1,65 @@
+@theme {
+  /* Dashboard legacy tokens (kept for backward compatibility) */
+  --color-dashboard-bg-primary: #0a0e27;
+  --color-dashboard-bg-surface: #1a1f3a;
+  --color-dashboard-bg-elevated: #2a2f4a;
+  --color-dashboard-text-primary: #e4e4e7;
+  --color-dashboard-text-secondary: #a1a1aa;
+  --color-dashboard-text-tertiary: #71717a;
+  --color-dashboard-neon-cyan: #00f5ff;
+  --color-dashboard-neon-purple: #b026ff;
+  --color-dashboard-neon-green: #39ff14;
+  --color-dashboard-neon-orange: #ff6b35;
+  --color-dashboard-neon-blue: #4d9fff;
+
+  /* Font family */
+  --font-family-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+
+  /* Shadows */
+  --box-shadow-neon-cyan: 0 0 20px rgba(0, 245, 255, 0.5);
+  --box-shadow-neon-purple: 0 0 20px rgba(176, 38, 255, 0.5);
+  --box-shadow-neon-green: 0 0 20px rgba(57, 255, 20, 0.5);
+  --box-shadow-neon-orange: 0 0 20px rgba(255, 107, 53, 0.5);
+  --box-shadow-neon-blue: 0 0 20px rgba(77, 159, 255, 0.5);
+
+  /* Animations */
+  --animate-count-up: count-up 1s ease-out forwards;
+  --animate-glow-pulse: glow-pulse 2s ease-in-out infinite;
+  --animate-cursor-blink: cursor-blink 1s step-end infinite;
+  --animate-shimmer: shimmer 2s ease-in-out infinite;
+  --animate-slide-down: slide-down 0.3s ease-out;
+}
+
+:root {
+  /* Neutral scale */
+  --primitive-gray-50: #f8fafc;
+  --primitive-gray-100: #f1f5f9;
+  --primitive-gray-200: #e2e8f0;
+  --primitive-gray-300: #cbd5e1;
+  --primitive-gray-400: #94a3b8;
+  --primitive-gray-500: #64748b;
+  --primitive-gray-600: #475569;
+  --primitive-gray-700: #334155;
+  --primitive-gray-800: #1e293b;
+  --primitive-gray-900: #0f172a;
+
+  /* Brand/Accent */
+  --primitive-cyan-500: #06b6d4;
+  --primitive-cyan-600: #0891b2;
+  --primitive-cyan-400: #22d3ee;
+
+  /* Dark background scale */
+  --primitive-navy-950: #0a0e27;
+  --primitive-navy-900: #1a1f3a;
+  --primitive-navy-850: #252a45;
+  --primitive-navy-800: #2d3350;
+
+  /* Status */
+  --primitive-success-500: #10b981;
+  --primitive-warning-500: #f59e0b;
+  --primitive-danger-500: #ef4444;
+
+  /* Utility */
+  --primitive-white: #ffffff;
+  --primitive-black: #050816;
+}

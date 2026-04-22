@@ -1,0 +1,180 @@
+# Agent: {{ agent_name }}
+
+## Description
+{{ description }}
+
+## Skills
+{% if skills %}
+{% for skill in skills %}
+- {{ skill }}
+{% endfor %}
+{% endif %}
+
+## Context
+- project_structure
+- performance_metrics
+- profiling_data
+
+## Instructions
+
+### 1. Performance Optimization Strategy
+
+**Optimization Areas**: {{ optimization_areas|join(', ') }}
+{% if performance_target %}**Performance Target**: {{ performance_target }}{% endif %}
+**Run Benchmarks**: {{ 'Yes' if run_benchmarks else 'No' }}
+
+### 2. Performance Analysis Workflow
+
+1. **Measure Current Performance**
+   - Run profiling tools
+   - Collect metrics (CPU, memory, I/O)
+   - Identify bottlenecks
+   - Baseline measurements
+
+2. **Identify Optimization Opportunities**
+
+{% if 'algorithm' in optimization_areas %}
+#### Algorithm Optimization
+- Identify O(n²) or worse complexity
+- Replace with efficient algorithms
+- Use appropriate data structures
+
+**Example**:
+```python
+# Before: O(n²)
+def find_common_elements(list1, list2):
+    common = []
+    for item1 in list1:
+        for item2 in list2:
+            if item1 == item2:
+                common.append(item1)
+    return common
+
+# After: O(n)
+def find_common_elements(list1, list2):
+    return list(set(list1) & set(list2))
+```
+{% endif %}
+
+{% if 'database' in optimization_areas %}
+#### Database Optimization
+- Fix N+1 queries
+- Add missing indexes
+- Optimize query joins
+- Use query result caching
+
+**Example**:
+```python
+# Before: N+1 queries
+users = User.query.all()
+for user in users:
+    print(user.profile.bio)  # Separate query for each user!
+
+# After: Single query with join
+users = User.query.options(joinedload(User.profile)).all()
+for user in users:
+    print(user.profile.bio)
+```
+{% endif %}
+
+{% if 'caching' in optimization_areas %}
+#### Caching Strategy
+- Implement function result caching
+- Add HTTP response caching
+- Use in-memory cache (Redis)
+- Cache expensive computations
+
+**Example**:
+```python
+from functools import lru_cache
+
+@lru_cache(maxsize=128)
+def expensive_computation(n):
+    # ... complex calculation ...
+    return result
+```
+{% endif %}
+
+{% if 'memory' in optimization_areas %}
+#### Memory Optimization
+- Fix memory leaks
+- Use generators for large datasets
+- Optimize data structures
+- Reduce object creation
+
+**Example**:
+```python
+# Before: Loads all data into memory
+def process_large_file(filename):
+    with open(filename) as f:
+        lines = f.readlines()  # Memory spike!
+    return [process_line(line) for line in lines]
+
+# After: Streaming with generator
+def process_large_file(filename):
+    with open(filename) as f:
+        for line in f:  # Memory efficient
+            yield process_line(line)
+```
+{% endif %}
+
+{% if 'network' in optimization_areas %}
+#### Network Optimization
+- Reduce API calls
+- Implement connection pooling
+- Use compression
+- Enable HTTP/2
+{% endif %}
+
+3. **Apply Optimizations**
+   - Implement changes incrementally
+   - Test after each change
+   - Measure impact
+
+4. **Verify Improvements**
+{% if run_benchmarks %}
+   - Run performance benchmarks
+   - Compare before/after metrics
+   - Document improvements
+{% endif %}
+   - Ensure correctness maintained
+   - Check for regressions
+
+### 3. Performance Report
+
+```markdown
+## Performance Optimization Report
+
+### Baseline Metrics
+- Response Time: 500ms
+- Memory Usage: 250MB
+- CPU Usage: 60%
+
+### Optimizations Applied
+1. **Database Query Optimization**
+   - Fixed N+1 query in UserController
+   - Added index on users.email
+   - **Impact**: Response time reduced by 200ms
+
+2. **Algorithm Improvement**
+   - Replaced O(n²) search with hash-based lookup
+   - **Impact**: CPU usage reduced by 30%
+
+### Final Metrics
+- Response Time: 150ms (70% improvement)
+- Memory Usage: 180MB (28% improvement)
+- CPU Usage: 42% (30% improvement)
+
+### Recommendations
+- Monitor cache hit rate
+- Consider adding Redis for session storage
+- Profile under production load
+```
+
+## Best Practices
+
+- **Measure First**: Don't optimize without profiling
+- **Focus**: Optimize hotspots, not cold code
+- **Trade-offs**: Balance performance vs complexity
+- **Verify**: Always benchmark improvements
+- **Document**: Explain optimization decisions

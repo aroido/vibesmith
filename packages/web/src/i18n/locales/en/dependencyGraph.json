@@ -1,0 +1,101 @@
+{
+  "pageTitle": "Dependency Graph",
+  "pageSubtitle": "Visualize component references and quickly inspect impact scope",
+  "loading": "Loading dependency graph...",
+  "loadError": "Failed to load dependency graph",
+  "noComponents": "No components found.",
+  "noComponentsHint": "Create your first component to see the dependency graph.",
+  "nodeSearch": "Node Search",
+  "nodeSearchPlaceholder": "name or id",
+  "hideDisabledNodes": "Hide disabled nodes",
+  "riskOnly": "Risk only",
+  "riskOnlyFull": "Risk only (cycle or broken)",
+  "noNodesMatchFilters": "No nodes match current local filters.",
+  "resetFilters": "Reset Local Filters",
+  "renderingNodes": "Rendering {{visible}} / {{total}} nodes",
+  "largeGraphMode": "(large graph mode: top {{max}} by connectivity)",
+  "layout": {
+    "orientationLabel": "Orientation",
+    "auto": "Auto",
+    "vertical": "Vertical",
+    "horizontal": "Horizontal",
+    "autoHint": "Auto picks the best direction from graph scale and viewport ratio."
+  },
+  "overview": {
+    "modeLabel": "Graph View",
+    "modeOverview": "Overview",
+    "modeDetail": "Detail",
+    "autoEnabledHint": "Overview is enabled for large graphs ({{threshold}}+ nodes).",
+    "renderingGroups": "Rendering {{groups}} overview groups from {{nodes}} nodes",
+    "title": "Large Graph Overview",
+    "subtitle": "{{count}} groups. Select a group to drill down into details.",
+    "openAllDetail": "Open Full Detail",
+    "nodeCount": "{{count}} nodes",
+    "cycleCount": "Cycle risk {{count}}",
+    "brokenCount": "Broken refs {{count}}",
+    "breadcrumbAria": "Overview breadcrumb",
+    "detailSubtitle": "{{group}} · {{count}} nodes in this group",
+    "showAllDetail": "Show All Detail",
+    "backToOverview": "Back To Overview"
+  },
+  "focus": {
+    "modeLabel": "Focus Mode",
+    "enter": "Enter Focus",
+    "clear": "Clear Focus",
+    "activeOn": "Focused: {{name}}",
+    "escHint": "Press Esc to clear focus",
+    "directionLabel": "Direction",
+    "directionOutbound": "Outbound",
+    "directionInbound": "Inbound",
+    "directionBoth": "Both",
+    "depthLabel": "Depth",
+    "depthValue": "{{depth}} hop",
+    "hideOutside": "Hide outside scope",
+    "scopeSummary": "{{nodes}} nodes · {{edges}} highlighted edges"
+  },
+  "legend": {
+    "live": "Live Legend",
+    "skill": "Skill",
+    "agent": "Agent",
+    "command": "Command",
+    "hook": "Hook",
+    "rule": "Rule",
+    "dependency": "Dependency",
+    "selectedPath": "Selected path",
+    "focusedPath": "Focus path",
+    "cycleRisk": "Cycle risk",
+    "broken": "Broken"
+  },
+  "panel": {
+    "loading": "Loading...",
+    "closeAria": "Close panel",
+    "error": "Error",
+    "loadDetailError": "Failed to load dependency details.",
+    "componentDetails": "Component Details",
+    "dependsOn": "Depends On ({{count}})",
+    "noDependencies": "No dependencies",
+    "dependedBy": "Depended By ({{count}})",
+    "noDependents": "No dependents",
+    "broken": "Broken",
+    "viewDetails": "View Details →"
+  },
+  "filters": {
+    "project": "Project:",
+    "all": "All",
+    "type": "Type:",
+    "circularDependencies": "{{count}} Circular Dependencies",
+    "brokenReferences": "{{count}} Broken References",
+    "typeSkill": "Skill",
+    "typeAgent": "Agent",
+    "typeCommand": "Command",
+    "typeHook": "Hook",
+    "typeRule": "Rule",
+    "includeGlobal": "Include global"
+  },
+  "tree": {
+    "circular": "Circular ref"
+  },
+  "canvas": {
+    "ariaLabel": "dependency graph canvas"
+  }
+}

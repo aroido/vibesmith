@@ -1,0 +1,111 @@
+# Skill: {{ skill_name }}
+
+## Description
+{{ description }}
+
+## Tools
+{% for tool in tools|default(['read', 'search']) %}
+- {{ tool }}
+{% endfor %}
+
+## Context
+- project_structure
+- git_history
+- dependencies
+
+## Instructions
+
+1. **Code Analysis**
+   - Review code structure and patterns
+   - Check for common anti-patterns
+   - Analyze complexity and maintainability
+
+2. **Review Focus Areas**
+{% for focus in review_focus %}
+   - {{ focus|title }}
+{% endfor %}
+
+3. **Severity Level**
+   - Report issues at: {{ severity_level|default('all') }} level and above
+
+4. **Review Checklist**
+
+{% if 'security' in review_focus %}
+**Security:**
+- Check for SQL injection vulnerabilities
+- Verify input validation and sanitization
+- Check for XSS vulnerabilities
+- Review authentication and authorization
+- Check for sensitive data exposure
+{% endif %}
+
+{% if 'performance' in review_focus %}
+**Performance:**
+- Identify inefficient algorithms (O(n²) or worse)
+- Check for unnecessary loops or iterations
+- Review database query efficiency
+- Check for memory leaks
+- Identify blocking operations
+{% endif %}
+
+{% if 'code-quality' in review_focus %}
+**Code Quality:**
+- Check code readability and maintainability
+- Review function/class size and complexity
+- Check for code duplication (DRY principle)
+- Review naming conventions
+- Check for proper error handling
+{% endif %}
+
+{% if 'best-practices' in review_focus %}
+**Best Practices:**
+- Follow language-specific conventions
+- Check for proper documentation
+- Review test coverage
+- Check for proper logging
+- Verify dependency management
+{% endif %}
+
+{% if 'accessibility' in review_focus %}
+**Accessibility:**
+- Check for proper ARIA labels
+- Verify keyboard navigation
+- Check color contrast
+- Review semantic HTML
+- Verify screen reader compatibility
+{% endif %}
+
+## Review Format
+
+For each issue found, provide:
+1. **Location**: File path and line number
+2. **Severity**: Critical/High/Medium/Low
+3. **Category**: Security/Performance/Quality/etc
+4. **Description**: Clear explanation of the issue
+5. **Recommendation**: How to fix it
+6. **Example**: Code snippet showing the fix
+
+## Example Output
+
+```markdown
+### Issue 1: SQL Injection Vulnerability
+
+**Location**: `app/db.py:45`  
+**Severity**: Critical  
+**Category**: Security
+
+**Description**: User input is directly interpolated into SQL query without sanitization.
+
+**Current Code**:
+```python
+query = f"SELECT * FROM users WHERE email = '{email}'"
+```
+
+**Recommendation**: Use parameterized queries.
+
+**Fixed Code**:
+```python
+query = "SELECT * FROM users WHERE email = ?"
+cursor.execute(query, (email,))
+```
+```

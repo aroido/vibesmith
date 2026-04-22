@@ -1,0 +1,127 @@
+# Agent: {{ agent_name }}
+
+## Description
+{{ description }}
+
+## Skills
+{% if skills %}
+{% for skill in skills %}
+- {{ skill }}
+{% endfor %}
+{% endif %}
+
+## Context
+- project_structure
+- test_results
+- error_logs
+
+## Instructions
+
+### 1. Bug Fixing Strategy
+
+**Bug Sources**: {{ bug_sources|join(', ') }}
+**Auto-Fix Level**: {{ auto_fix_level|default('safe-only') }}
+**Create Regression Tests**: {{ 'Yes' if create_tests else 'No' }}
+
+### 2. Bug Fixing Workflow
+
+1. **Identify Bugs**
+{% for source in bug_sources %}
+   - {{ source|title|replace('-', ' ') }}
+{% endfor %}
+
+2. **Reproduce Bug**
+   - Create minimal reproduction
+   - Write failing test case
+   - Document expected vs actual behavior
+
+3. **Root Cause Analysis**
+   - Trace code execution
+   - Identify faulty logic
+   - Check for edge cases
+   - Review recent changes
+
+4. **Fix Bug**
+
+{% if auto_fix_level == 'safe-only' %}
+**Safe Fixes Only**:
+- Fix obvious typos
+- Correct syntax errors
+- Fix import errors
+- Update deprecated APIs
+{% elif auto_fix_level == 'moderate' %}
+**Moderate Fixes**:
+- Fix logic errors with clear solutions
+- Handle null/undefined checks
+- Fix off-by-one errors
+- Correct type mismatches
+{% elif auto_fix_level == 'aggressive' %}
+**Aggressive Fixes**:
+- Refactor buggy code sections
+- Apply design pattern fixes
+- Optimize problematic algorithms
+{% endif %}
+
+**Example Fix**:
+```python
+# Bug: IndexError in list access
+def get_first_item(items):
+    return items[0]  # Crashes on empty list
+
+# Fix: Add guard clause
+def get_first_item(items):
+    if not items:
+        return None
+    return items[0]
+```
+
+5. **Verify Fix**
+   - Run related tests
+   - Check for side effects
+   - Verify edge cases
+{% if create_tests %}
+   - Add regression test
+{% endif %}
+
+### 3. Bug Fix Checklist
+
+- [ ] Bug is reproducible
+- [ ] Root cause identified
+- [ ] Fix is minimal and targeted
+- [ ] Tests pass after fix
+- [ ] No new bugs introduced
+- [ ] Edge cases handled
+{% if create_tests %}
+- [ ] Regression test added
+{% endif %}
+
+### 4. Bug Report Format
+
+```markdown
+## Bug Fix Summary
+
+**Issue**: [Brief description]
+**Severity**: Critical/High/Medium/Low
+**Root Cause**: [Technical explanation]
+
+### Changes
+- Fixed null pointer exception in UserService
+- Added validation for email field
+- Updated error handling
+
+### Testing
+- Added test case for empty email
+- Verified all existing tests pass
+- Tested edge cases manually
+
+### Regression Prevention
+- Added unit test: `test_user_service_handles_null_email`
+```
+
+## Best Practices
+
+- **Minimal Changes**: Fix only what's broken
+- **Test First**: Write test that fails, then fix
+- **Document**: Explain why the fix works
+- **Verify**: Run full test suite
+- **Prevent**: Add tests to prevent regression
