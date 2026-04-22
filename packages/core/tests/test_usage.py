@@ -11,6 +11,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from vibesmith_core.usage import parse_session_file, scan_project_sessions
+from vibesmith_core.usage import parser as parser_module
 
 
 def _assistant_event(tool_uses: list[dict], *, timestamp: str | None = None) -> dict:
@@ -32,11 +33,11 @@ def _skill_tool_use(skill_name: str) -> dict:
     return {"type": "tool_use", "name": "Skill", "input": {"skill": skill_name}}
 
 
-def _task_tool_use(description: str, subagent_type: str) -> dict:
-    """Task (subagent) tool_use 블록."""
+def _task_tool_use(description: str, subagent_type: str, *, name: str = "Task") -> dict:
+    """Subagent tool_use 블록. Claude Code는 name="Task" 또는 "Agent"를 사용한다."""
     return {
         "type": "tool_use",
-        "name": "Task",
+        "name": name,
         "input": {"description": description, "subagent_type": subagent_type},
     }
 
@@ -82,6 +83,17 @@ def _write_jsonl(path: Path, events: list[dict]) -> None:
     with open(path, "w") as f:
         for event in events:
             f.write(json.dumps(event) + "\n")
+
+
+class TestParserVersion:
+    """파서 버전 상수 검증."""
+
+    def test_parser_version_is_positive_int(self):
+        """PARSER_VERSION은 양의 정수이며, Task→Agent 지원 수정 시점에서 >= 2."""
+        version = getattr(parser_module, "PARSER_VERSION", None)
+        assert version is not None, "parser 모듈에 PARSER_VERSION 상수가 정의되어야 한다"
+        assert isinstance(version, int)
+        assert version >= 2
 
 
 class TestParseSessionFile:
@@ -167,6 +179,25 @@ class TestParseSessionFile:
         assert by_type["Explore"]["use_count"] == 1
         assert by_type["planner"]["use_count"] == 1
         assert by_type["architect"]["use_count"] == 1
+
+    def test_parse_subagent_usage_agent_tool_name(self, tmp_path: Path):
+        """최신 Claude Code는 subagent tool 이름을 'Agent'로 기록한다."""
+        session_file = tmp_path / "session.jsonl"
+        _write_jsonl(
+            session_file,
+            [
+                _assistant_event([_task_tool_use("시장 분석", "market-scanner", name="Agent")]),
+                _assistant_event([_task_tool_use("리스크 점검", "risk-manager", name="Agent")]),
+                _assistant_event([_task_tool_use("시장 분석", "market-scanner", name="Agent")]),
+            ],
+        )
+
+        stats = parse_session_file(str(session_file))
+
+        by_type = {s["component_name"]: s for s in stats}
+        assert by_type["market-scanner"]["component_type"] == "agent"
+        assert by_type["market-scanner"]["use_count"] == 2
+        assert by_type["risk-manager"]["use_count"] == 1
 
     def test_parse_command_invocation(self, tmp_path: Path):
         """사용자가 /command-name 을 직접 타이핑한 커맨드 호출을 감지한다."""

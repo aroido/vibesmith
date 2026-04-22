@@ -117,11 +117,13 @@ CREATE INDEX IF NOT EXISTS idx_licenses_user_id ON licenses(user_id);
 CREATE INDEX IF NOT EXISTS idx_licenses_status ON licenses(status);
 
 -- Issue #67: Usage Tracking (session log parsing)
+-- Issue #2: parser_version 추가 — 파서 로직 변경 시 자동 재파싱 트리거
 CREATE TABLE IF NOT EXISTS usage_parse_state (
     project_path TEXT NOT NULL,
     session_file TEXT NOT NULL,
     byte_offset INTEGER NOT NULL DEFAULT 0,
     updated_at TEXT NOT NULL,
+    parser_version INTEGER NOT NULL DEFAULT 1,
     PRIMARY KEY (project_path, session_file)
 );
 
@@ -481,6 +483,7 @@ class DatabaseManager:
             print("conflict_ignores table added successfully")
 
         # Issue #67: Add usage_parse_state table
+        # Issue #2: parser_version included in fresh-DB DDL so new users start with PARSER_VERSION tracking
         if "usage_parse_state" not in existing_tables:
             print("DB migration: adding usage_parse_state table...")
             conn.execute(
@@ -490,6 +493,7 @@ class DatabaseManager:
                     session_file TEXT NOT NULL,
                     byte_offset INTEGER NOT NULL DEFAULT 0,
                     updated_at TEXT NOT NULL,
+                    parser_version INTEGER NOT NULL DEFAULT 1,
                     PRIMARY KEY (project_path, session_file)
                 )
                 """
@@ -876,6 +880,20 @@ class DatabaseManager:
                 "ON usage_stats(component_name, used_at)"
             )
             conn.commit()
+
+        # Issue #2: Add parser_version column to usage_parse_state
+        # 파서 로직이 업데이트되면 이 값을 기반으로 이미 파싱된 세션이 자동 재파싱된다
+        if "usage_parse_state" in existing_tables:
+            cursor = conn.execute("PRAGMA table_info(usage_parse_state)")
+            parse_state_columns = {row[1] for row in cursor.fetchall()}
+            if "parser_version" not in parse_state_columns:
+                print("DB migration: adding parser_version column to usage_parse_state...")
+                try:
+                    conn.execute("ALTER TABLE usage_parse_state ADD COLUMN parser_version INTEGER NOT NULL DEFAULT 1")
+                    conn.commit()
+                    print("parser_version column added successfully")
+                except sqlite3.OperationalError as e:
+                    print(f"Migration failed: {e}")
 
         if "components" in existing_tables:
             # Check columns in components table
