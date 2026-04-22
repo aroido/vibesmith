@@ -48,6 +48,7 @@ def _make_test_db():
             session_file TEXT NOT NULL,
             byte_offset INTEGER NOT NULL DEFAULT 0,
             updated_at TEXT NOT NULL,
+            parser_version INTEGER NOT NULL DEFAULT 1,
             PRIMARY KEY (project_path, session_file)
         );
         CREATE TABLE IF NOT EXISTS usage_sessions (
@@ -244,6 +245,171 @@ class TestUsageScannerScanOnce:
 
         assert result["sessions_parsed"] == 1
         assert result["stats_saved"] >= 1
+
+
+class TestParserVersionReparse:
+    """파서 버전 기반 자동 재파싱 (Issue #2 Phase B)."""
+
+    def _bootstrap(self, tmp_path: Path):
+        """공통 세팅: 프로젝트 등록 + 세션 디렉토리 + 2건 skill 이벤트가 담긴 세션 파일."""
+        conn = _make_test_db()
+        project_path = str(tmp_path / "proj")
+        conn.execute(
+            _INSERT_PROJECT,
+            ("p1", "proj", project_path, 0, 0, "2026-02-19"),
+        )
+        conn.commit()
+
+        claude_base = tmp_path / "claude_home"
+        session_dir = _setup_claude_session_dir(claude_base, project_path)
+        session_file = session_dir / "session.jsonl"
+        _write_jsonl(
+            session_file,
+            [
+                _assistant_skill("commit-helper"),
+                _assistant_skill("commit-helper"),
+            ],
+        )
+        return conn, project_path, claude_base, session_file
+
+    def test_reparse_triggered_when_parser_version_outdated(self, tmp_path: Path):
+        """state.parser_version < PARSER_VERSION이면 byte_offset=0부터 재파싱한다."""
+        from vibesmith_core.usage.parser import PARSER_VERSION
+
+        conn, project_path, claude_base, session_file = self._bootstrap(tmp_path)
+
+        # 기존 유저 상황: parser_version=1로 이미 파일 끝까지 파싱 완료 상태 기록
+        file_size = session_file.stat().st_size
+        conn.execute(
+            "INSERT INTO usage_parse_state "
+            "(project_path, session_file, byte_offset, updated_at, parser_version) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (project_path, "session.jsonl", file_size, "2026-01-01T00:00:00+00:00", 1),
+        )
+        conn.commit()
+
+        scanner = UsageScanner(conn, claude_base_dir=str(claude_base / "claude_projects"))
+        result = scanner.scan_once()
+
+        # 재파싱 트리거되어 stats가 생성되어야 한다
+        assert result["stats_saved"] >= 1
+
+        # parse_state의 parser_version이 현재 값으로 업데이트됨
+        row = conn.execute(
+            "SELECT parser_version FROM usage_parse_state WHERE session_file = 'session.jsonl'"
+        ).fetchone()
+        assert row[0] == PARSER_VERSION
+
+    def test_reparse_not_triggered_when_parser_version_current(self, tmp_path: Path):
+        """state.parser_version == PARSER_VERSION이고 offset >= file_size면 재파싱 안 한다."""
+        from vibesmith_core.usage.parser import PARSER_VERSION
+
+        conn, project_path, claude_base, session_file = self._bootstrap(tmp_path)
+
+        file_size = session_file.stat().st_size
+        conn.execute(
+            "INSERT INTO usage_parse_state "
+            "(project_path, session_file, byte_offset, updated_at, parser_version) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (
+                project_path,
+                "session.jsonl",
+                file_size,
+                "2026-01-01T00:00:00+00:00",
+                PARSER_VERSION,
+            ),
+        )
+        conn.commit()
+
+        scanner = UsageScanner(conn, claude_base_dir=str(claude_base / "claude_projects"))
+        result = scanner.scan_once()
+
+        assert result["sessions_parsed"] == 0
+        assert result["stats_saved"] == 0
+
+    def test_new_session_saved_with_current_parser_version(self, tmp_path: Path):
+        """신규 세션(state 없음)은 처음부터 PARSER_VERSION으로 저장된다."""
+        from vibesmith_core.usage.parser import PARSER_VERSION
+
+        conn, project_path, claude_base, _ = self._bootstrap(tmp_path)
+
+        scanner = UsageScanner(conn, claude_base_dir=str(claude_base / "claude_projects"))
+        scanner.scan_once()
+
+        row = conn.execute(
+            "SELECT parser_version FROM usage_parse_state WHERE session_file = 'session.jsonl'"
+        ).fetchone()
+        assert row is not None
+        assert row[0] == PARSER_VERSION
+
+    def test_reparse_replaces_existing_stats_no_duplicates(self, tmp_path: Path):
+        """재파싱 시 기존 stats는 교체되어 중복이 생기지 않는다."""
+        conn, project_path, claude_base, session_file = self._bootstrap(tmp_path)
+
+        # 옛 파서(v1)로 이미 저장된 stats 시나리오 모사: 세션 + 임의 stats 레코드 삽입
+        session_id = "old-session-id"
+        conn.execute(
+            "INSERT INTO usage_sessions (id, project_path, session_file, parsed_at) VALUES (?, ?, ?, ?)",
+            (
+                session_id,
+                project_path,
+                "session.jsonl",
+                "2026-01-01T00:00:00+00:00",
+            ),
+        )
+        conn.execute(
+            "INSERT INTO usage_stats "
+            "(id, session_id, component_name, component_type, use_count, used_at) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            (
+                "stale-stat",
+                session_id,
+                "outdated-skill",
+                "skill",
+                99,
+                "2026-01-01T00:00:00+00:00",
+            ),
+        )
+        # parser_version=1로 기존 파싱 완료 상태
+        file_size = session_file.stat().st_size
+        conn.execute(
+            "INSERT INTO usage_parse_state "
+            "(project_path, session_file, byte_offset, updated_at, parser_version) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (project_path, "session.jsonl", file_size, "2026-01-01T00:00:00+00:00", 1),
+        )
+        conn.commit()
+
+        scanner = UsageScanner(conn, claude_base_dir=str(claude_base / "claude_projects"))
+        scanner.scan_once()
+
+        # stale-stat은 사라지고, 실제 세션에서 파싱된 commit-helper만 남아야 한다
+        names = [
+            r[0]
+            for r in conn.execute(
+                "SELECT component_name FROM usage_stats us "
+                "JOIN usage_sessions s ON us.session_id = s.id "
+                "WHERE s.session_file = 'session.jsonl'"
+            ).fetchall()
+        ]
+        assert "outdated-skill" not in names
+        assert any(n == "commit-helper" for n in names)
+
+    def test_reparse_idempotent_on_double_scan(self, tmp_path: Path):
+        """재파싱 완료 후 동일 파일 재스캔 시 중복 재파싱 없음(stats 개수 유지)."""
+        conn, project_path, claude_base, _ = self._bootstrap(tmp_path)
+
+        scanner = UsageScanner(conn, claude_base_dir=str(claude_base / "claude_projects"))
+        scanner.scan_once()
+
+        first_count = conn.execute("SELECT COUNT(*) FROM usage_stats").fetchone()[0]
+
+        # 두 번째 스캔 — 추가 변동 없어야 한다
+        result2 = scanner.scan_once()
+        second_count = conn.execute("SELECT COUNT(*) FROM usage_stats").fetchone()[0]
+
+        assert result2["sessions_parsed"] == 0
+        assert first_count == second_count
 
 
 class TestUsageScannerRegistry:

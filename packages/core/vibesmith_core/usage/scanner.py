@@ -25,7 +25,7 @@ from vibesmith_core.usage.adapters import (
     CursorUsageAdapter,
 )
 from vibesmith_core.usage.cursor_usage_parser import parse_cursor_agentkv_db, parse_cursor_db
-from vibesmith_core.usage.parser import parse_session_file
+from vibesmith_core.usage.parser import PARSER_VERSION, parse_session_file
 from vibesmith_core.usage.repo import (
     get_parse_state,
     reset_usage_data_selective,
@@ -157,15 +157,29 @@ class UsageScanner:
                 filename = jsonl_file.name
 
                 state = get_parse_state(self._conn, project_path, filename)
-                offset = state["byte_offset"] if state else 0
                 file_size = jsonl_file.stat().st_size
 
-                if offset >= file_size:
+                # Issue #2: 파서 로직이 업그레이드되면 이미 파싱된 세션도 자동 재파싱한다
+                needs_reparse = state is not None and state["parser_version"] < PARSER_VERSION
+                if needs_reparse:
+                    offset = 0
+                    replace_existing = True
+                else:
+                    offset = state["byte_offset"] if state else 0
+                    replace_existing = False
+
+                if not needs_reparse and offset >= file_size:
                     continue
 
                 stats = parse_session_file(str(jsonl_file), byte_offset=offset)
                 if not stats:
-                    save_parse_state(self._conn, project_path, filename, file_size)
+                    save_parse_state(
+                        self._conn,
+                        project_path,
+                        filename,
+                        file_size,
+                        parser_version=PARSER_VERSION,
+                    )
                     continue
 
                 save_usage_stats(
@@ -173,8 +187,15 @@ class UsageScanner:
                     project_path=project_path,
                     session_file=filename,
                     stats=stats,
+                    replace_existing_stats=replace_existing,
                 )
-                save_parse_state(self._conn, project_path, filename, file_size)
+                save_parse_state(
+                    self._conn,
+                    project_path,
+                    filename,
+                    file_size,
+                    parser_version=PARSER_VERSION,
+                )
 
                 total_sessions += 1
                 total_stats += len(stats)
@@ -217,6 +238,7 @@ class UsageScanner:
             next_rowid = max(last_rowid, checkpoint_rowid)
             next_mtime = current_mtime if should_scan_composer else last_mtime
 
+            # TODO(Issue #2): Cursor parser_version 지원은 별도 Issue. 현재는 parser_version=1(기본값) 저장됨.
             if not composer_results and not agentkv_results:
                 save_parse_state(self._conn, CURSOR_GLOBAL_PROJECT_PATH, _CURSOR_PARSE_STATE_KEY, next_mtime)
                 save_parse_state(self._conn, CURSOR_GLOBAL_PROJECT_PATH, _CURSOR_AGENTKV_ROWID_STATE_KEY, next_rowid)

@@ -18,17 +18,27 @@ def save_parse_state(
     project_path: str,
     session_file: str,
     byte_offset: int,
+    parser_version: int = 1,
 ) -> None:
-    """Save the parse state (upsert)."""
+    """Save the parse state (upsert).
+
+    `parser_version`은 이 시점에 파싱한 파서 로직의 버전이다. scanner가 나중에
+    PARSER_VERSION과 비교해 낮으면 해당 세션을 재파싱한다. 기본값은 하위 호환용 1이며,
+    신규 파싱/재파싱 경로에서는 명시적으로 현재 PARSER_VERSION을 전달한다.
+    """
     now = datetime.now(UTC).isoformat()
     conn.execute(
         """
-        INSERT INTO usage_parse_state (project_path, session_file, byte_offset, updated_at)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO usage_parse_state
+            (project_path, session_file, byte_offset, updated_at, parser_version)
+        VALUES (?, ?, ?, ?, ?)
         ON CONFLICT(project_path, session_file)
-        DO UPDATE SET byte_offset = excluded.byte_offset, updated_at = excluded.updated_at
+        DO UPDATE SET
+            byte_offset = excluded.byte_offset,
+            updated_at = excluded.updated_at,
+            parser_version = excluded.parser_version
         """,
-        (project_path, session_file, byte_offset, now),
+        (project_path, session_file, byte_offset, now, parser_version),
     )
     conn.commit()
 
@@ -40,12 +50,13 @@ def get_parse_state(
 ) -> dict | None:
     """Look up the parse state."""
     row = conn.execute(
-        "SELECT byte_offset, updated_at FROM usage_parse_state WHERE project_path = ? AND session_file = ?",
+        "SELECT byte_offset, updated_at, parser_version "
+        "FROM usage_parse_state WHERE project_path = ? AND session_file = ?",
         (project_path, session_file),
     ).fetchone()
     if row is None:
         return None
-    return {"byte_offset": row[0], "updated_at": row[1]}
+    return {"byte_offset": row[0], "updated_at": row[1], "parser_version": row[2]}
 
 
 def _resolve_component(

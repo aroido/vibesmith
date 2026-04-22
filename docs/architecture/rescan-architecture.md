@@ -1,7 +1,7 @@
 # Rescan & Data Synchronization Architecture Design
 
 **Created**: 2026-03-13
-**Updated**: 2026-03-15
+**Updated**: 2026-04-23
 **Status**: Design finalized
 
 ---
@@ -238,6 +238,7 @@ Separate monitoring timer (`WorkerSupervisor`)
 | 2026-03-14 | Worker restart method | 30-second interval monitoring timer (WorkerSupervisor) |
 | 2026-03-15 | Usage FK absence | usage_sessions/parse_state use project_path string reference → manual cleanup required on deletion |
 | 2026-03-15 | Factory Reset worker stop | Wait for scan_lock then stop (prevent partial scan) |
+| 2026-04-23 | Parser version auto-reparse | Introduce `PARSER_VERSION` + `usage_parse_state.parser_version` for automatic reparsing on parser upgrades (see §11) |
 
 ---
 
@@ -269,3 +270,67 @@ Design verified using 5 domain agents (Project, Component, Dependency, Usage, Wo
 
 - **Project hide feature**: Convert individual project "delete" to "hide" + fix section 7 data leaks
 - **Unresolved dependency tracking**: `docs/architecture/unresolved-dependencies.md`
+- **Parser version auto-reparse**: Issue #2 (vibesmith-dev) — see §11
+
+---
+
+## 11. Parser Version Auto-Reparse (Issue #2)
+
+### Motivation
+
+The rescan mechanisms in §1–§4 require an **explicit user action** (Sync button or Factory Reset) to re-parse existing session logs. When we improve the parser itself (e.g., recognizing a new tool name or event type), users on older data stay stuck — `usage_parse_state.byte_offset` already points to end-of-file, so the scanner skips those sessions on every subsequent run.
+
+Concrete trigger case: Claude Code changed the subagent tool name from `Task` to `Agent`. The parser fix alone would not backfill any historical data without reparsing. We need parser updates to propagate automatically to installed users on the next scan cycle.
+
+### Mechanism
+
+**Source of truth** — `parser.py` exposes a module-level constant:
+
+```python
+PARSER_VERSION = 2  # bump when parsing rules change
+```
+
+**Per-session record** — `usage_parse_state` gains a `parser_version` column:
+
+```sql
+usage_parse_state (
+    project_path TEXT,
+    session_file TEXT,
+    byte_offset INTEGER,
+    updated_at TEXT,
+    parser_version INTEGER NOT NULL DEFAULT 1,
+    PRIMARY KEY (project_path, session_file)
+)
+```
+
+`DEFAULT 1` ensures legacy rows (written before this feature) are automatically classified as "older parser" during migration.
+
+**Scanner decision** — before parsing a session, the scanner compares stored version with `PARSER_VERSION`:
+
+| Condition | Action |
+|-----------|--------|
+| `state is None` (new session) | Parse from `byte_offset=0`, record `PARSER_VERSION` |
+| `state.parser_version < PARSER_VERSION` | Reparse from `byte_offset=0`, `replace_existing_stats=True`, record `PARSER_VERSION` |
+| `state.parser_version == PARSER_VERSION` and `byte_offset < file_size` | Incremental parse from `byte_offset`, record `PARSER_VERSION` |
+| `state.parser_version == PARSER_VERSION` and `byte_offset >= file_size` | Skip |
+
+The `replace_existing_stats=True` path (see `repo.py` `save_usage_stats`) deletes the session's existing stats before inserting new ones, so the DB never contains duplicates from reparsing.
+
+### Migration
+
+On first run of an updated client the `DatabaseManager._migrate_schema()` adds the column via `ALTER TABLE ... ADD COLUMN parser_version INTEGER NOT NULL DEFAULT 1`. All existing rows get `parser_version=1`. Since the new `PARSER_VERSION=2`, the scanner immediately flags every Claude Code session for reparse on the next scan tick.
+
+### Idempotency & Recovery
+
+The version is only written **after** successful stats persistence. If the worker is interrupted mid-reparse, the next scan sees `parser_version=1` again and retries with the same `replace_existing_stats=True` behavior — stats are deleted and re-inserted, reaching the same final state. No duplicate accumulation is possible.
+
+### Scope Limitations
+
+- Currently implemented only in `_scan_claude_code()`. Cursor session parsing (`_scan_cursor`) reuses `save_parse_state` but does not check `parser_version` on read. A TODO marker is placed in `_scan_cursor` for future extension.
+- Bumping `PARSER_VERSION` on every release is a deliberate decision — only bump when the parsing rule actually changes so users don't pay the reparse cost unnecessarily.
+
+### Interaction with Existing Reset Flows
+
+- **Sync (Normal Rescan)** already fully deletes `usage_parse_state` (§2), so it will pick up the new `PARSER_VERSION` for every session on the next scan regardless.
+- **Factory Reset** (§4) similarly nullifies the reparse decision tree.
+- The parser-version flow is purely for the case where neither of those has been triggered — i.e., automatic propagation on app update.

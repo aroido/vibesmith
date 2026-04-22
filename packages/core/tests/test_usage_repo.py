@@ -87,6 +87,7 @@ def _setup_test_db():
             session_file TEXT NOT NULL,
             byte_offset INTEGER NOT NULL DEFAULT 0,
             updated_at TEXT NOT NULL,
+            parser_version INTEGER NOT NULL DEFAULT 1,
             PRIMARY KEY (project_path, session_file)
         );
 
@@ -163,6 +164,112 @@ class TestParseState:
         state = get_parse_state(conn, "/path/to/project", "session1.jsonl")
         assert state["byte_offset"] == 2048
         conn.close()
+
+    def test_save_parse_state_with_version(self):
+        """parser_version 전달 시 저장되고 조회 시 반환된다."""
+        conn = _setup_test_db()
+
+        save_parse_state(conn, "/path/to/project", "session1.jsonl", 1024, parser_version=2)
+        state = get_parse_state(conn, "/path/to/project", "session1.jsonl")
+
+        assert state is not None
+        assert state["byte_offset"] == 1024
+        assert state["parser_version"] == 2
+        conn.close()
+
+    def test_save_parse_state_updates_version_on_upsert(self):
+        """재저장 시 parser_version도 함께 업데이트된다(ON CONFLICT DO UPDATE)."""
+        conn = _setup_test_db()
+
+        save_parse_state(conn, "/path/to/project", "session1.jsonl", 100, parser_version=1)
+        save_parse_state(conn, "/path/to/project", "session1.jsonl", 500, parser_version=2)
+
+        state = get_parse_state(conn, "/path/to/project", "session1.jsonl")
+        assert state["byte_offset"] == 500
+        assert state["parser_version"] == 2
+        conn.close()
+
+    def test_get_parse_state_default_version_for_old_records(self):
+        """parser_version 컬럼이 DEFAULT 1이므로 legacy 레코드는 1로 조회된다."""
+        conn = _setup_test_db()
+
+        # parser_version 지정 없이 직접 INSERT (기존 유저 상황 모사)
+        conn.execute(
+            "INSERT INTO usage_parse_state (project_path, session_file, byte_offset, updated_at) VALUES (?, ?, ?, ?)",
+            ("/legacy/project", "old.jsonl", 256, "2026-01-01T00:00:00+00:00"),
+        )
+        conn.commit()
+
+        state = get_parse_state(conn, "/legacy/project", "old.jsonl")
+        assert state is not None
+        assert state["byte_offset"] == 256
+        assert state["parser_version"] == 1
+        conn.close()
+
+
+class TestUsageParseStateMigration:
+    """기존 유저 DB → parser_version 컬럼 마이그레이션 + 신규 DB fresh 생성."""
+
+    def test_fresh_db_has_parser_version_column(self, tmp_path):
+        """신규 유저(빈 DB)에 initialize_schema() 호출 시 parser_version 컬럼이 생성된다."""
+        from vibesmith_core.infra.db import DatabaseManager
+
+        db_file = tmp_path / "fresh.db"
+        manager = DatabaseManager(str(db_file))
+        manager.initialize_schema()
+
+        conn = manager.get_connection()
+        columns = {
+            row[1]
+            for row in conn.execute("PRAGMA table_info(usage_parse_state)").fetchall()
+        }
+        assert "parser_version" in columns, (
+            "신규 DB에서도 usage_parse_state에 parser_version 컬럼이 있어야 한다"
+        )
+
+    def test_migration_adds_parser_version_column_and_defaults_legacy_to_one(self, tmp_path):
+        """구 스키마(parser_version 없음) DB를 가진 기존 유저에 대해,
+        DatabaseManager.initialize_schema() 호출 시 parser_version 컬럼이 추가되고
+        기존 레코드는 DEFAULT 1로 조회된다."""
+        import sqlite3
+
+        from vibesmith_core.infra.db import DatabaseManager
+
+        db_file = tmp_path / "legacy.db"
+        # 구 스키마 재현 — parser_version 없음
+        conn = sqlite3.connect(str(db_file))
+        conn.execute(
+            """
+            CREATE TABLE usage_parse_state (
+                project_path TEXT NOT NULL,
+                session_file TEXT NOT NULL,
+                byte_offset INTEGER NOT NULL DEFAULT 0,
+                updated_at TEXT NOT NULL,
+                PRIMARY KEY (project_path, session_file)
+            )
+            """
+        )
+        conn.execute(
+            "INSERT INTO usage_parse_state (project_path, session_file, byte_offset, updated_at) VALUES (?, ?, ?, ?)",
+            ("/legacy/project", "old.jsonl", 512, "2026-01-01T00:00:00+00:00"),
+        )
+        conn.commit()
+        conn.close()
+
+        # 마이그레이션 실행
+        manager = DatabaseManager(str(db_file))
+        manager.initialize_schema()
+
+        # 컬럼 존재 및 기존 레코드 DEFAULT 값 확인
+        conn = manager.get_connection()
+        columns = {row[1] for row in conn.execute("PRAGMA table_info(usage_parse_state)").fetchall()}
+        assert "parser_version" in columns
+
+        row = conn.execute(
+            "SELECT parser_version FROM usage_parse_state WHERE project_path = ?",
+            ("/legacy/project",),
+        ).fetchone()
+        assert row[0] == 1, "legacy 레코드는 DEFAULT 1로 마이그레이션되어야 한다"
 
 
 class TestUsageStats:

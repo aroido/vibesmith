@@ -3,7 +3,7 @@
 Actual Claude Code JSONL event structure:
 - Skill: type="assistant" -> message.content[].type="tool_use" + name="Skill"
 - Hook: type="progress" -> data.type="hook_progress" + data.hookName
-- Subagent: type="assistant" -> message.content[].type="tool_use" + name="Task"
+- Subagent: type="assistant" -> message.content[].type="tool_use" + name in ("Task", "Agent")
 - Command: type="user" (not isMeta) -> message.content contains <command-name>/xxx</command-name> pattern
 """
 
@@ -16,6 +16,12 @@ from pathlib import Path
 
 _TIMESTAMP_KEYS = ("timestamp", "createdAt", "created_at", "time", "ts")
 _COMMAND_NAME_RE = re.compile(r"<command-name>/([^<]+)</command-name>")
+
+# 파서 로직의 버전. 파싱 규칙을 변경한 뒤 기존에 파싱된 세션을
+# 자동 재파싱시키려면 이 값을 올린다. scanner가 usage_parse_state.parser_version
+# 과 비교하여 값이 낮은 세션을 byte_offset=0부터 다시 파싱한다.
+# - v2: Claude Code의 subagent tool name "Task" → "Agent" 지원
+PARSER_VERSION = 2
 
 
 def _coerce_timestamp(value: object) -> datetime | None:
@@ -143,8 +149,8 @@ def parse_session_file(path: str, byte_offset: int = 0) -> list[dict]:
                                 _update_latest_time(skill_last_used, skill, event_used_at)
                             skill_has_timestamp[skill] = skill_has_timestamp.get(skill, False) or has_timestamp
 
-                    # Subagent usage (Task tool)
-                    elif tool_name == "Task":
+                    # Subagent usage (Task/Agent tool — Claude Code uses both names)
+                    elif tool_name in ("Task", "Agent"):
                         subagent_type = tool_input.get("subagent_type")
                         if subagent_type:
                             agent_counts[subagent_type] += 1
