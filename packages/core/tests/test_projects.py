@@ -357,56 +357,33 @@ class TestRescanPreserve:
         assert row is not None, "휴지통 항목은 rescan에서 보존되어야 한다"
         assert row[1] is not None, "deleted_at이 유지되어야 한다"
 
-    def test_rescan_updates_hidden_component_metadata(self, pm, db, tmp_path):
-        """파일이 다시 생성된 숨김 컴포넌트는 메타데이터만 업데이트하고 숨김 상태를 유지한다."""
+    def test_rescan_auto_restores_trashed_component_when_file_recreated(self, pm, db, tmp_path):
+        """휴지통 컴포넌트와 같은 이름의 파일이 다시 생성되면 자동 복원된다 (#10)."""
         project, project_dir = self._setup_project_with_skill(pm, tmp_path)
         conn = db.get_connection()
         comp_id = conn.execute("SELECT id FROM components WHERE project_id = ?", (project.id,)).fetchone()[0]
 
-        # soft delete 처리
         from vibesmith_core.components.operations import ComponentOperations
 
         ops = ComponentOperations(db)
         ops.soft_delete(comp_id)
 
-        # 같은 이름으로 파일 다시 생성 (디스크에 파일 있음 + DB에 숨김)
         skill_dir = project_dir / ".claude" / "skills" / "my-skill"
         skill_dir.mkdir(parents=True, exist_ok=True)
-        (skill_dir / "SKILL.md").write_text("---\nname: my-skill\n---\n\nUpdated content after recreation")
+        new_skill_path = skill_dir / "SKILL.md"
+        new_skill_path.write_text("---\nname: my-skill\n---\n\nUpdated content after recreation")
 
         pm.rescan(project.id)
 
-        row = conn.execute("SELECT id, deleted_at, content FROM components WHERE id = ?", (comp_id,)).fetchone()
-        assert row is not None, "숨김 컴포넌트가 DB에 남아있어야 한다"
-        assert row[1] is not None, "deleted_at이 유지되어야 한다 (숨김 상태 유지)"
-        assert "Updated content after recreation" in row[2], "메타데이터가 업데이트되어야 한다"
-
-    def test_rescan_hidden_component_updates_content_but_preserves_trash_path(self, pm, db, tmp_path):
-        """숨김 컴포넌트의 content는 업데이트하되 path(_trash 경로)는 유지된다."""
-        project, project_dir = self._setup_project_with_skill(pm, tmp_path)
-        conn = db.get_connection()
-        comp_id = conn.execute("SELECT id FROM components WHERE project_id = ?", (project.id,)).fetchone()[0]
-
-        # soft delete 처리
-        from vibesmith_core.components.operations import ComponentOperations
-
-        ops = ComponentOperations(db)
-        ops.soft_delete(comp_id)
-
-        # trash path 기록
-        trash_path = conn.execute("SELECT path FROM components WHERE id = ?", (comp_id,)).fetchone()[0]
-        assert "_trash" in trash_path
-
-        # 같은 이름으로 파일 다시 생성
-        skill_dir = project_dir / ".claude" / "skills" / "my-skill"
-        skill_dir.mkdir(parents=True, exist_ok=True)
-        (skill_dir / "SKILL.md").write_text("---\nname: my-skill\n---\n\nRecreated content")
-
-        pm.rescan(project.id)
-
-        row = conn.execute("SELECT path, content FROM components WHERE id = ?", (comp_id,)).fetchone()
-        assert "_trash" in row[0], "trash path가 유지되어야 한다"
-        assert "Recreated content" in row[1], "content는 업데이트되어야 한다"
+        row = conn.execute(
+            "SELECT deleted_at, original_path, path, content FROM components WHERE id = ?",
+            (comp_id,),
+        ).fetchone()
+        assert row is not None, "컴포넌트 레코드가 유지되어야 한다 (새 INSERT 아님)"
+        assert row[0] is None, "deleted_at 이 NULL 로 초기화되어 자동 복원되어야 한다"
+        assert row[1] is None, "original_path 가 NULL 로 초기화되어야 한다"
+        assert row[2] == str(new_skill_path), "path 가 디스크의 현재 경로로 업데이트되어야 한다"
+        assert "Updated content after recreation" in row[3], "content 가 업데이트되어야 한다"
 
     def _setup_project_with_agent(self, pm, tmp_path, file_stem="1", name_field=None):
         """프로젝트와 에이전트 1개를 생성하고 초기 스캔한다."""

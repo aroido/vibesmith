@@ -208,24 +208,23 @@ class ProjectManager:
             if key in existing_map:
                 existing = existing_map[key]
                 if existing.get("deleted_at"):
-                    # File exists + trashed: Update metadata but keep trashed state and path
-                    scanned_fm = (
-                        json.dumps(comp.frontmatter, default=str, ensure_ascii=False) if comp.frontmatter else None
+                    # File is on disk despite DB marked trashed — user re-created
+                    # the component (e.g. after accidental delete or after #8
+                    # atomic-save-race recovery). Auto-restore: clear deleted_at
+                    # and original_path, point path at the current disk location,
+                    # and refresh metadata.
+                    self._operations.update(
+                        existing["id"],
+                        {
+                            "content": comp.content,
+                            "description": comp.description,
+                            "frontmatter": comp.frontmatter,
+                            "updated_at": comp.updated_at,
+                            "path": comp.path,
+                            "deleted_at": None,
+                            "original_path": None,
+                        },
                     )
-                    existing_fm = existing["frontmatter"]
-                    content_changed = existing["content"] != comp.content
-                    desc_changed = existing["description"] != comp.description
-                    fm_changed = existing_fm != scanned_fm
-                    if content_changed or desc_changed or fm_changed:
-                        self._operations.update(
-                            existing["id"],
-                            {
-                                "content": comp.content,
-                                "description": comp.description,
-                                "frontmatter": comp.frontmatter,
-                                "updated_at": comp.updated_at,
-                            },
-                        )
                     continue
                 # UPDATE: Only update when actual changes exist
                 existing_fm = existing["frontmatter"]
@@ -290,6 +289,14 @@ class ProjectManager:
                     # Keep trashed items as-is to avoid watchdog rescans after soft_delete.
                     pass
                 else:
+                    # Re-check the file system before soft_delete: IntelliJ/vi atomic
+                    # save briefly unlinks then recreates the target, and scanner may
+                    # run during that window. The scan result is a hint, not truth;
+                    # the current file system state decides. If the file is still on
+                    # disk, skip — the next rescan will reconcile any real change.
+                    existing_path = existing.get("path")
+                    if existing_path and Path(existing_path).is_file():
+                        continue
                     # File missing + active/disabled -> soft delete (move to trash)
                     self._operations.soft_delete(existing["id"])
 
