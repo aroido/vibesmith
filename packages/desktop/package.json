@@ -1,6 +1,6 @@
 {
   "name": "@vibesmith/desktop",
-  "version": "0.5.4-alpha.17",
+  "version": "0.5.4-alpha.18",
   "description": "VibeSmith Desktop App (Electron)",
   "main": "out/main/main.js",
   "author": "VibeSmith Contributors",
